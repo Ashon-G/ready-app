@@ -46,6 +46,8 @@ export default function StashScreen() {
 
 function GLBModelViewer() {
   const frame = useRef<number | null>(null);
+  const mixer = useRef<THREE.AnimationMixer | null>(null);
+  const clock = useRef(new THREE.Clock());
 
   useEffect(() => {
     return () => {
@@ -100,6 +102,23 @@ function GLBModelViewer() {
             model.position.set(0, 1, 0); // lower it
             model.rotation.y = 0;
             scene.add(model);
+
+            mixer.current = new THREE.AnimationMixer(model);
+
+            const animLoader = new GLTFLoader();
+            animLoader.load(
+              "https://raw.githubusercontent.com/readyplayerme/animation-library/master/feminine/glb/idle/F_Standing_Idle_Variations_001.glb",
+              (animGltf) => {
+                if (animGltf.animations && animGltf.animations.length > 0 && mixer.current) {
+                  const action = mixer.current.clipAction(animGltf.animations[0]);
+                  action.play();
+                }
+              },
+              undefined,
+              (animError) => {
+                console.error("Animation load error:", animError);
+              }
+            );
           },
           (progress) => {
             console.log(
@@ -114,6 +133,10 @@ function GLBModelViewer() {
 
         const animate = () => {
           frame.current = requestAnimationFrame(animate);
+          const delta = clock.current.getDelta();
+          if (mixer.current) {
+            mixer.current.update(delta);
+          }
           renderer.render(scene, camera);
           gl.endFrameEXP();
         };
