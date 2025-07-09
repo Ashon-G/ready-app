@@ -23,7 +23,7 @@ export default function StashScreen() {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <ScrollView style={styles.scrollContainer}>
+   
         <View style={styles.mainWrapper}>
           <View style={styles.centerColumn}>
             <GLBModelViewer />
@@ -39,7 +39,7 @@ export default function StashScreen() {
             </BottomDrawer>
           </View>
         </View>
-      </ScrollView>
+  
     </SafeAreaView>
   );
 }
@@ -97,7 +97,7 @@ function GLBModelViewer() {
             console.log("GLB loaded:", gltf);
             const model = gltf.scene;
             model.scale.set(1, 1, 1);
-            model.position.set(0, -1, 0); // lower it
+            model.position.set(0, 1, 0); // lower it
             model.rotation.y = 0;
             scene.add(model);
           },
@@ -126,9 +126,8 @@ function GLBModelViewer() {
 const styles = StyleSheet.create({
   safeContainer: { flex: 1, backgroundColor: "#fff" },
   scrollContainer: { flex: 1 },
-  mainWrapper: { marginTop: 189 },
   centerColumn: { alignItems: "center" },
-  innerBox: { backgroundColor: "#fff", paddingTop: 7, paddingBottom: 121 },
+  innerBox: { backgroundColor: "#fff" },
   bgPanelImage: { height: 400 },
   panelBackgroundOverlay: {
     position: "absolute",
@@ -149,27 +148,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
+  
   sectionTitle: { fontSize: 18, fontWeight: "bold" },
-  topBarButton: {
-    backgroundColor: "#F3F2FF",
-    borderRadius: 50,
-    paddingVertical: 7,
-    paddingHorizontal: 6,
-  },
-  topBarButtonIcon: { width: 28, height: 28 },
-  cardContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 12,
-    borderRadius: 10,
-  },
+  
   largeCardButton: {
     backgroundColor: "transparent",
     borderRadius: 10,
@@ -190,16 +171,10 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   cardText: { fontSize: 14 },
-  shadowLayer: {
-    position: "absolute",
-    top: 181,
-    right: 0,
-    left: 0,
-    height: 85,
-  },
+
   characterOverlay: {
     position: "absolute",
-    top: 169,
+
     right: 64,
     left: 64,
     height: 258,
