@@ -15,6 +15,8 @@ import { Renderer } from "expo-three";
 import * as THREE from "three";
 import { GLTFLoader } from "three-stdlib";
 import BottomDrawer from "../../components/BottomDrawer";
+import LootCard from "../../components/LootCard";
+import { lootItems } from "../constants/lootData";
 
 const { width } = Dimensions.get("window");
 
@@ -31,11 +33,16 @@ export default function StashScreen() {
               isOpen={drawerOpen}
               onClose={() => setDrawerOpen(false)}
             >
-              {/* Drawer content here */}
-              <Text style={{ fontSize: 18 }}>Hello from drawer</Text>
-              <TouchableOpacity onPress={() => setDrawerOpen(false)}>
-                <Text style={{ color: "blue", marginTop: 10 }}>Close</Text>
-              </TouchableOpacity>
+              <ScrollView>
+                {lootItems.map((item, index) => (
+                  <View key={index} style={{ marginBottom: 16 }}>
+                    <LootCard {...item} />
+                  </View>
+                ))}
+                <TouchableOpacity onPress={() => setDrawerOpen(false)}>
+                  <Text style={{ color: "blue", marginTop: 10 }}>Close</Text>
+                </TouchableOpacity>
+              </ScrollView>
             </BottomDrawer>
           </View>
         </View>
