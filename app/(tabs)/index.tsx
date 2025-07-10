@@ -1,5 +1,6 @@
 import EarningsCard from "@/components/EarningsCard";
-import React from "react";
+import VideoAd from "@/components/VideoAd";
+import React, { useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -13,6 +14,7 @@ import {
 import { earnings } from "../constants/mockData";
 
 export default function HomeScreen() {
+  const [adVisible, setAdVisible] = useState(false);
   return (
     <SafeAreaView style={styles.safeContainer}>
       <ScrollView style={styles.scrollContainer}>
@@ -60,7 +62,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <View style={styles.bonusRow}>
+          <TouchableOpacity style={styles.bonusRow} onPress={() => setAdVisible(true)}>
             <Image
               source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/SbVinpZIfd/fr22k70p_expires_30_days.png" }}
               style={styles.bonusImageLeft}
@@ -77,7 +79,7 @@ export default function HomeScreen() {
               style={styles.bonusImageRight}
               resizeMode="stretch"
             />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Survey Section */}
@@ -106,6 +108,7 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
       </ScrollView>
+      <VideoAd visible={adVisible} onClose={() => setAdVisible(false)} />
     </SafeAreaView>
   );
 }
