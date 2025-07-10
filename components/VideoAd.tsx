@@ -1,65 +1,83 @@
 import React, { useEffect } from "react";
-import { Platform, View, Button } from "react-native";
+import { Platform, View } from "react-native";
 import { WebView } from "react-native-webview";
 
 const API_KEY = "55c09aea-7355-4266-8454-edee59ed4c4f";
 const INJECTION_ID = "some-id";
 
-export default function VideoAd() {
-  // Web implementation: inject the Applixir script and open player on button press
-  if (Platform.OS === "web") {
-    useEffect(() => {
-      if (!document.getElementById("applixir-script")) {
-        const script = document.createElement("script");
-        script.id = "applixir-script";
-        script.src = "https://cdn.applixir.com/applixir.app.v6.0.1.js";
-        script.async = true;
-        document.body.appendChild(script);
-      }
-    }, []);
+type Props = {
+  visible: boolean;
+  onClose?: () => void;
+};
 
-    const handlePress = () => {
+export default function VideoAd({ visible, onClose }: Props) {
+  // Load the Applixir script on web once
+  useEffect(() => {
+    if (Platform.OS === "web" && !document.getElementById("applixir-script")) {
+      const script = document.createElement("script");
+      script.id = "applixir-script";
+      script.src = "https://cdn.applixir.com/applixir.app.v6.0.1.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // Open the player when visible becomes true
+  useEffect(() => {
+    if (Platform.OS === "web" && visible) {
       const options = {
         apiKey: API_KEY,
         injectionElementId: INJECTION_ID,
-        adStatusCallbackFn: (status: any) => console.log("OUTSIDE Ad status: ", status),
-        adErrorCallbackFn: (error: any) => console.log("Error: ", error.getError().data),
+        adStatusCallbackFn: (status: any) => {
+          if (
+            ["thankYouModalClosed", "manuallyEnded", "allAdsCompleted"].includes(
+              status.type
+            )
+          ) {
+            onClose?.();
+          }
+        },
+        adErrorCallbackFn: () => onClose?.(),
       };
-      // @ts-ignore
+      // @ts-ignore - loaded from external script
       if (typeof initializeAndOpenPlayer === "function") {
         // @ts-ignore
         initializeAndOpenPlayer(options);
       }
-    };
+    }
+  }, [visible, onClose]);
 
-    return (
-      <View>
-        <div id={INJECTION_ID}></div>
-        <Button title="Play Ad" onPress={handlePress} />
-      </View>
-    );
+  if (!visible) {
+    return null;
   }
 
-  // Native implementation: use a WebView with embedded HTML
+  if (Platform.OS === "web") {
+    return <div id={INJECTION_ID}></div>;
+  }
+
+  // Native implementation: open player automatically
   const html = `
     <div id="${INJECTION_ID}"></div>
-    <button id="start">Play Ad</button>
     <script type="text/javascript" src="https://cdn.applixir.com/applixir.app.v6.0.1.js"></script>
     <script type="text/javascript">
       const options = {
         apiKey: "${API_KEY}",
         injectionElementId: "${INJECTION_ID}",
         adStatusCallbackFn: (status) => {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'status', status }));
+          if (["thankYouModalClosed", "manuallyEnded", "allAdsCompleted"].includes(status.type)) {
+            window.ReactNativeWebView.postMessage('close');
+          }
         },
-        adErrorCallbackFn: (error) => {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', error: error.getError().data }));
-        },
+        adErrorCallbackFn: () => { window.ReactNativeWebView.postMessage('close'); },
       };
-      document.getElementById('start').addEventListener('click', () => {
-        initializeAndOpenPlayer(options);
-      });
+      window.onload = function () { initializeAndOpenPlayer(options); };
     </script>`;
 
-  return <WebView originWhitelist={["*"]} source={{ html }} />;
+  return (
+    <WebView
+      originWhitelist={["*"]}
+      source={{ html }}
+      onMessage={() => onClose?.()}
+    />
+  );
 }
