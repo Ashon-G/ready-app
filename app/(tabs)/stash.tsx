@@ -14,6 +14,7 @@ import { GLView } from "expo-gl";
 import { Renderer } from "expo-three";
 import * as THREE from "three";
 import { GLTFLoader } from "three-stdlib";
+import { Asset } from "expo-asset";
 import BottomDrawer from "../../components/BottomDrawer";
 import LootCard from "../../components/LootCard";
 import { lootItems } from "../constants/lootData";
@@ -141,10 +142,28 @@ function Header({ coins }: HeaderProps) {
   );
 }
 
-function GLBModelViewer() {
+type ModelViewerProps = {
+  modelSrc?: string | number;
+  animationSrc?: string | number;
+};
+
+function GLBModelViewer({
+  modelSrc =
+    "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb",
+  animationSrc =
+    "https://raw.githubusercontent.com/readyplayerme/animation-library/master/feminine/glb/idle/F_Standing_Idle_Variations_001.glb",
+}: ModelViewerProps) {
   const frame = useRef<number | null>(null);
   const mixer = useRef<THREE.AnimationMixer | null>(null);
   const clock = useRef(new THREE.Clock());
+
+  const resolveAsset = async (src: string | number) => {
+    if (typeof src === "string") {
+      return src;
+    }
+    const [asset] = await Asset.loadAsync(src);
+    return asset.localUri || asset.uri;
+  };
 
   useEffect(() => {
     return () => {
@@ -222,31 +241,25 @@ function GLBModelViewer() {
 
         // ✅ Load GLB character
         const loader = new GLTFLoader();
-        loader.load(
-          "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb",
-          (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(2, 2, 2);
-            model.position.set(0, -0.2, 0);
-            scene.add(model);
+        const modelUri = await resolveAsset(modelSrc);
+        const animationUri = await resolveAsset(animationSrc);
+        loader.load(modelUri, (gltf) => {
+          const model = gltf.scene;
+          model.scale.set(2, 2, 2);
+          model.position.set(0, -0.2, 0);
+          scene.add(model);
 
-            mixer.current = new THREE.AnimationMixer(model);
+          mixer.current = new THREE.AnimationMixer(model);
 
-            // ✅ Load animation
-            const animLoader = new GLTFLoader();
-            animLoader.load(
-              "https://raw.githubusercontent.com/readyplayerme/animation-library/master/feminine/glb/idle/F_Standing_Idle_Variations_001.glb",
-              (animGltf) => {
-                if (animGltf.animations.length > 0 && mixer.current) {
-                  const action = mixer.current.clipAction(
-                    animGltf.animations[0]
-                  );
-                  action.play();
-                }
-              }
-            );
-          }
-        );
+          // ✅ Load animation
+          const animLoader = new GLTFLoader();
+          animLoader.load(animationUri, (animGltf) => {
+            if (animGltf.animations.length > 0 && mixer.current) {
+              const action = mixer.current.clipAction(animGltf.animations[0]);
+              action.play();
+            }
+          });
+        });
 
         // ✅ Animation loop
         const animate = () => {
