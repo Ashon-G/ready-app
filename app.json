@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "5739fbcc-10ef-4990-bf18-7e403231dad0"
+      }
+    },
+    "android": {
+      "package": "com.vashong.moneyearningapp"
+    },
+    "ios": {
+      "bundleIdentifier": "com.vashong.moneyearningapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
