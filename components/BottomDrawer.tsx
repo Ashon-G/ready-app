@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Animated,
   PanResponder,
@@ -18,6 +18,7 @@ type Props = {
 
 export default function BottomDrawer({ isOpen, onClose, children }: Props) {
   const translateY = React.useRef(new Animated.Value(screenHeight)).current;
+  const [visible, setVisible] = useState(isOpen);
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -41,6 +42,7 @@ export default function BottomDrawer({ isOpen, onClose, children }: Props) {
   ).current;
 
   const openDrawer = () => {
+    setVisible(true);
     Animated.timing(translateY, {
       toValue: 0,
       duration: 300,
@@ -53,17 +55,25 @@ export default function BottomDrawer({ isOpen, onClose, children }: Props) {
       toValue: screenHeight,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => onClose());
+    }).start(() => {
+      setVisible(false);
+      onClose();
+    });
   };
 
   useEffect(() => {
     if (isOpen) openDrawer();
-    else closeDrawer();
+    else if (visible) closeDrawer();
   }, [isOpen]);
 
+  if (!visible) return null;
+
   return (
-    <TouchableWithoutFeedback onPress={onClose}>
-      <View style={styles.backdrop}>
+    <TouchableWithoutFeedback onPress={closeDrawer}>
+      <View
+        style={[styles.backdrop, !isOpen && styles.hiddenBackdrop]}
+        pointerEvents={isOpen ? 'auto' : 'none'}
+      >
         <Animated.View
           style={[styles.drawer, { transform: [{ translateY }] }]}
           {...panResponder.panHandlers}
@@ -81,6 +91,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
     zIndex: 1000,
+  },
+  hiddenBackdrop: {
+    backgroundColor: 'transparent',
   },
   drawer: {
     backgroundColor: '#fff',
