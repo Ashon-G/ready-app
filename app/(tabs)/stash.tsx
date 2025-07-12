@@ -34,6 +34,8 @@ const DEFAULT_USER = {
 
 const SUBDOMAIN = "arcadia-next";
 const AVATAR_STORAGE_KEY = "@avatar:url";
+const DEFAULT_AVATAR_URL =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuBak5aHgqR_B9odfm1jIehKDYNzyvFBfb48rHF-46hQRuPE7AvUarl-d2XwMC5C3m_3EwJgiT2vsNwoFOQ32sqBO_04aIwsg13yzoWNNs6bLYu5xLtiOIAZEQ862qMKwXDOphauSD3mGeQ0q-Y2tVfhHmUd_EsHqEUvG4S3_MSPCOrU9-VpokgOiaKK_BYI6nwA4syqynWSOJVl9tXuYF-LGybc0pbpkdxSRubhSjir2tZnM86A4OaIhPUzAmAbdJfkO8YpqMjWiokr";
 
 StashScreen.options = {
   headerShown: false,
@@ -92,9 +94,7 @@ export default function StashScreen() {
           <View style={styles.detailsRow}>
             <View style={styles.avatarRow}>
               <Image
-                source={{
-                  uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBak5aHgqR_B9odfm1jIehKDYNzyvFBfb48rHF-46hQRuPE7AvUarl-d2XwMC5C3m_3EwJgiT2vsNwoFOQ32sqBO_04aIwsg13yzoWNNs6bLYu5xLtiOIAZEQ862qMKwXDOphauSD3mGeQ0q-Y2tVfhHmUd_EsHqEUvG4S3_MSPCOrU9-VpokgOiaKK_BYI6nwA4syqynWSOJVl9tXuYF-LGybc0pbpkdxSRubhSjir2tZnM86A4OaIhPUzAmAbdJfkO8YpqMjWiokr",
-                }}
+                source={{ uri: avatarUrl || DEFAULT_AVATAR_URL }}
                 style={styles.avatar}
               />
               <View style={styles.avatarPlaceholder} />
