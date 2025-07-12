@@ -15,6 +15,7 @@ import { Renderer } from "expo-three";
 import * as THREE from "three";
 import { GLTFLoader } from "three-stdlib";
 import { WebView } from "react-native-webview";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomDrawer from "../../components/BottomDrawer";
 import LootCard from "../../components/LootCard";
 import { lootItems } from "../constants/lootData";
@@ -32,6 +33,7 @@ const DEFAULT_USER = {
 };
 
 const SUBDOMAIN = "arcadia-next";
+const AVATAR_STORAGE_KEY = "@avatar:url";
 
 StashScreen.options = {
   headerShown: false,
@@ -47,11 +49,22 @@ export default function StashScreen() {
   const [showCreator, setShowCreator] = useState(false);
   const webviewRef = useRef<WebView>(null);
 
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem(AVATAR_STORAGE_KEY);
+      if (saved) {
+        setAvatarUrl(saved);
+      }
+    })();
+  }, []);
+
   const handleMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.eventName === "v1.avatar.exported") {
-        setAvatarUrl(data.data.url);
+        const url = data.data.url;
+        setAvatarUrl(url);
+        AsyncStorage.setItem(AVATAR_STORAGE_KEY, url);
         setShowCreator(false);
       }
     } catch {}
@@ -65,6 +78,7 @@ export default function StashScreen() {
         originWhitelist={["*"]}
         source={{ uri }}
         onMessage={handleMessage}
+        injectedJavaScript={`(function() {\n  window.addEventListener('message', function(e) {\n    try {\n      const d = JSON.parse(e.data);\n      if (d.source !== 'readyplayerme') return;\n      if (d.eventName === 'v1.frame.ready') {\n        window.postMessage(JSON.stringify({ target: 'readyplayerme', type: 'subscribe', eventName: 'v1.avatar.exported' }), '*');\n      } else if (d.eventName === 'v1.avatar.exported') {\n        window.ReactNativeWebView.postMessage(e.data);\n      }\n    } catch (err) {}\n  });\n})();`}
         style={{ flex: 1 }}
       />
     );
