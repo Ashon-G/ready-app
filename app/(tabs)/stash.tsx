@@ -8,6 +8,7 @@ import {
   Image,
   StyleSheet,
   Dimensions,
+  Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { GLView } from "expo-gl";
@@ -40,10 +41,6 @@ const USER_TOKEN_KEY = "rpm_token";
 const USER_ID_KEY = "rpm_user_id";
 const DEFAULT_GLB_URL =
   "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb";
-
-StashScreen.options = {
-  headerShown: false,
-};
 
 export default function StashScreen() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -89,6 +86,19 @@ export default function StashScreen() {
 
   if (showCreator) {
     const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache`;
+
+    if (Platform.OS === "web") {
+      return (
+        <SafeAreaView style={{ flex: 1 }}>
+          <iframe
+            src={uri}
+            style={{ width: "100%", height: "100%", border: "none" }}
+            sandbox="allow-scripts allow-same-origin allow-forms"
+          />
+        </SafeAreaView>
+      );
+    }
+
     return (
       <WebView
         ref={webviewRef}
@@ -181,6 +191,8 @@ export default function StashScreen() {
     </SafeAreaView>
   );
 }
+
+// ... keep Header, GLBModelViewer, and styles the same ...
 
 type HeaderProps = { coins: string };
 
@@ -289,31 +301,26 @@ function GLBModelViewer({ modelUrl }: GLBModelViewerProps) {
 
         // ✅ Load GLB character
         const loader = new GLTFLoader();
-        loader.load(
-          modelUrl,
-          (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(2, 2, 2);
-            model.position.set(0, -0.2, 0);
-            scene.add(model);
+        loader.load(modelUrl, (gltf) => {
+          const model = gltf.scene;
+          model.scale.set(2, 2, 2);
+          model.position.set(0, -0.2, 0);
+          scene.add(model);
 
-            mixer.current = new THREE.AnimationMixer(model);
+          mixer.current = new THREE.AnimationMixer(model);
 
-            // ✅ Load animation
-            const animLoader = new GLTFLoader();
-            animLoader.load(
-              "https://raw.githubusercontent.com/readyplayerme/animation-library/master/feminine/glb/idle/F_Standing_Idle_Variations_001.glb",
-              (animGltf) => {
-                if (animGltf.animations.length > 0 && mixer.current) {
-                  const action = mixer.current.clipAction(
-                    animGltf.animations[0]
-                  );
-                  action.play();
-                }
+          // ✅ Load animation
+          const animLoader = new GLTFLoader();
+          animLoader.load(
+            "https://raw.githubusercontent.com/readyplayerme/animation-library/master/feminine/glb/idle/F_Standing_Idle_Variations_001.glb",
+            (animGltf) => {
+              if (animGltf.animations.length > 0 && mixer.current) {
+                const action = mixer.current.clipAction(animGltf.animations[0]);
+                action.play();
               }
-            );
-          }
-        );
+            }
+          );
+        });
 
         // ✅ Animation loop
         const animate = () => {
