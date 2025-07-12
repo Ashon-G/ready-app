@@ -14,6 +14,7 @@ import { GLView } from "expo-gl";
 import { Renderer } from "expo-three";
 import * as THREE from "three";
 import { GLTFLoader } from "three-stdlib";
+import { WebView } from "react-native-webview";
 import BottomDrawer from "../../components/BottomDrawer";
 import LootCard from "../../components/LootCard";
 import { lootItems } from "../constants/lootData";
@@ -30,6 +31,8 @@ const DEFAULT_USER = {
   rank: "#138871",
 };
 
+const SUBDOMAIN = "arcadia-next";
+
 StashScreen.options = {
   headerShown: false,
 };
@@ -40,6 +43,32 @@ export default function StashScreen() {
   const [mainButtonLabel] = useState("SAKU BATTLES");
   const [newBadgeLabel] = useState("NEW");
   const [detailsLabel] = useState("Details");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showCreator, setShowCreator] = useState(false);
+  const webviewRef = useRef<WebView>(null);
+
+  const handleMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.eventName === "v1.avatar.exported") {
+        setAvatarUrl(data.data.url);
+        setShowCreator(false);
+      }
+    } catch {}
+  };
+
+  if (showCreator) {
+    const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache`;
+    return (
+      <WebView
+        ref={webviewRef}
+        originWhitelist={["*"]}
+        source={{ uri }}
+        onMessage={handleMessage}
+        style={{ flex: 1 }}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -65,13 +94,19 @@ export default function StashScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.modelWrapper}>
-            <GLBModelViewer />
+            <GLBModelViewer modelUrl={avatarUrl || undefined} />
           </View>
           <View style={styles.dots}>
             <View style={[styles.dot, { backgroundColor: "#3b82f6" }]} />
             <View style={styles.dot} />
             <View style={styles.dot} />
           </View>
+          <TouchableOpacity
+            style={[styles.detailsButton, { alignSelf: "center", marginTop: 8 }]}
+            onPress={() => setShowCreator(true)}
+          >
+            <Text style={styles.detailsButtonText}>Customize Avatar</Text>
+          </TouchableOpacity>
           <View style={styles.userRow}>
             <Text style={styles.username}>{user.username}</Text>
             <MaterialIcons
@@ -141,7 +176,7 @@ function Header({ coins }: HeaderProps) {
   );
 }
 
-function GLBModelViewer() {
+function GLBModelViewer({ modelUrl }: { modelUrl?: string }) {
   const frame = useRef<number | null>(null);
   const mixer = useRef<THREE.AnimationMixer | null>(null);
   const clock = useRef(new THREE.Clock());
@@ -222,9 +257,10 @@ function GLBModelViewer() {
 
         // ✅ Load GLB character
         const loader = new GLTFLoader();
-        loader.load(
-          "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb",
-          (gltf) => {
+        const url =
+          modelUrl ||
+          "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb";
+        loader.load(url, (gltf) => {
             const model = gltf.scene;
             model.scale.set(2, 2, 2);
             model.position.set(0, -0.2, 0);
