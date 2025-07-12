@@ -8,12 +8,16 @@ import {
   Image,
   StyleSheet,
   Dimensions,
+  Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { GLView } from "expo-gl";
 import { Renderer } from "expo-three";
 import * as THREE from "three";
 import { GLTFLoader } from "three-stdlib";
+import { WebView } from "react-native-webview";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ReadyPlayerMe, { RPMUser } from "@/lib/ReadyPlayerMe";
 import BottomDrawer from "../../components/BottomDrawer";
 import LootCard from "../../components/LootCard";
 import { lootItems } from "../constants/lootData";
@@ -30,9 +34,13 @@ const DEFAULT_USER = {
   rank: "#138871",
 };
 
-StashScreen.options = {
-  headerShown: false,
-};
+const APP_ID = "683c0f07d8f16f5cf857a864";
+const SUBDOMAIN = "arcadia-next";
+const AVATAR_URL_KEY = "rpm_avatar_url";
+const USER_TOKEN_KEY = "rpm_token";
+const USER_ID_KEY = "rpm_user_id";
+const DEFAULT_GLB_URL =
+  "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb";
 
 export default function StashScreen() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -40,6 +48,67 @@ export default function StashScreen() {
   const [mainButtonLabel] = useState("SAKU BATTLES");
   const [newBadgeLabel] = useState("NEW");
   const [detailsLabel] = useState("Details");
+  const [rpmUser, setRpmUser] = useState<RPMUser | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showCreator, setShowCreator] = useState(false);
+  const webviewRef = useRef<WebView>(null);
+
+  useEffect(() => {
+    (async () => {
+      const storedUrl = await AsyncStorage.getItem(AVATAR_URL_KEY);
+      if (storedUrl) setAvatarUrl(storedUrl);
+
+      const token = await AsyncStorage.getItem(USER_TOKEN_KEY);
+      const id = await AsyncStorage.getItem(USER_ID_KEY);
+      if (token && id) {
+        setRpmUser({ id, token });
+      } else {
+        const newUser = await ReadyPlayerMe.createAnonymousUser(APP_ID);
+        setRpmUser(newUser);
+        await AsyncStorage.multiSet([
+          [USER_ID_KEY, newUser.id],
+          [USER_TOKEN_KEY, newUser.token],
+        ]);
+      }
+    })();
+  }, []);
+
+  const handleMessage = async (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.eventName === "v1.avatar.exported") {
+        setAvatarUrl(data.data.url);
+        await AsyncStorage.setItem(AVATAR_URL_KEY, data.data.url);
+        setShowCreator(false);
+      }
+    } catch {}
+  };
+
+  if (showCreator) {
+    const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache`;
+
+    if (Platform.OS === "web") {
+      return (
+        <SafeAreaView style={{ flex: 1 }}>
+          <iframe
+            src={uri}
+            style={{ width: "100%", height: "100%", border: "none" }}
+            sandbox="allow-scripts allow-same-origin allow-forms"
+          />
+        </SafeAreaView>
+      );
+    }
+
+    return (
+      <WebView
+        ref={webviewRef}
+        originWhitelist={["*"]}
+        source={{ uri }}
+        onMessage={handleMessage}
+        style={{ flex: 1 }}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -65,8 +134,14 @@ export default function StashScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.modelWrapper}>
-            <GLBModelViewer />
+            <GLBModelViewer modelUrl={avatarUrl ?? DEFAULT_GLB_URL} />
           </View>
+          <TouchableOpacity
+            style={styles.detailsButton}
+            onPress={() => setShowCreator(true)}
+          >
+            <Text style={styles.detailsButtonText}>Customize Avatar</Text>
+          </TouchableOpacity>
           <View style={styles.dots}>
             <View style={[styles.dot, { backgroundColor: "#3b82f6" }]} />
             <View style={styles.dot} />
@@ -117,6 +192,8 @@ export default function StashScreen() {
   );
 }
 
+// ... keep Header, GLBModelViewer, and styles the same ...
+
 type HeaderProps = { coins: string };
 
 function Header({ coins }: HeaderProps) {
@@ -141,7 +218,9 @@ function Header({ coins }: HeaderProps) {
   );
 }
 
-function GLBModelViewer() {
+type GLBModelViewerProps = { modelUrl: string };
+
+function GLBModelViewer({ modelUrl }: GLBModelViewerProps) {
   const frame = useRef<number | null>(null);
   const mixer = useRef<THREE.AnimationMixer | null>(null);
   const clock = useRef(new THREE.Clock());
@@ -222,31 +301,26 @@ function GLBModelViewer() {
 
         // ✅ Load GLB character
         const loader = new GLTFLoader();
-        loader.load(
-          "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb",
-          (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(2, 2, 2);
-            model.position.set(0, -0.2, 0);
-            scene.add(model);
+        loader.load(modelUrl, (gltf) => {
+          const model = gltf.scene;
+          model.scale.set(2, 2, 2);
+          model.position.set(0, -0.2, 0);
+          scene.add(model);
 
-            mixer.current = new THREE.AnimationMixer(model);
+          mixer.current = new THREE.AnimationMixer(model);
 
-            // ✅ Load animation
-            const animLoader = new GLTFLoader();
-            animLoader.load(
-              "https://raw.githubusercontent.com/readyplayerme/animation-library/master/feminine/glb/idle/F_Standing_Idle_Variations_001.glb",
-              (animGltf) => {
-                if (animGltf.animations.length > 0 && mixer.current) {
-                  const action = mixer.current.clipAction(
-                    animGltf.animations[0]
-                  );
-                  action.play();
-                }
+          // ✅ Load animation
+          const animLoader = new GLTFLoader();
+          animLoader.load(
+            "https://raw.githubusercontent.com/readyplayerme/animation-library/master/feminine/glb/idle/F_Standing_Idle_Variations_001.glb",
+            (animGltf) => {
+              if (animGltf.animations.length > 0 && mixer.current) {
+                const action = mixer.current.clipAction(animGltf.animations[0]);
+                action.play();
               }
-            );
-          }
-        );
+            }
+          );
+        });
 
         // ✅ Animation loop
         const animate = () => {
