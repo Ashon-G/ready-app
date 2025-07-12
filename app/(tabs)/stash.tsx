@@ -16,6 +16,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three-stdlib";
 import { WebView } from "react-native-webview";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ReadyPlayerMe, { RPMUser } from "../../lib/ReadyPlayerMe";
 import BottomDrawer from "../../components/BottomDrawer";
 import LootCard from "../../components/LootCard";
 import { lootItems } from "../constants/lootData";
@@ -33,7 +34,10 @@ const DEFAULT_USER = {
 };
 
 const SUBDOMAIN = "arcadia-next";
+const APP_ID = "683c0f07d8f16f5cf857a864";
 const AVATAR_STORAGE_KEY = "@avatar:url";
+const AVATAR_ID_KEY = "@avatar:id";
+const USER_KEY = "@rpm:user";
 const DEFAULT_AVATAR_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBak5aHgqR_B9odfm1jIehKDYNzyvFBfb48rHF-46hQRuPE7AvUarl-d2XwMC5C3m_3EwJgiT2vsNwoFOQ32sqBO_04aIwsg13yzoWNNs6bLYu5xLtiOIAZEQ862qMKwXDOphauSD3mGeQ0q-Y2tVfhHmUd_EsHqEUvG4S3_MSPCOrU9-VpokgOiaKK_BYI6nwA4syqynWSOJVl9tXuYF-LGybc0pbpkdxSRubhSjir2tZnM86A4OaIhPUzAmAbdJfkO8YpqMjWiokr";
 
@@ -51,29 +55,67 @@ export default function StashScreen() {
   const [showCreator, setShowCreator] = useState(false);
   const webviewRef = useRef<WebView>(null);
 
+  const [rpmUser, setRpmUser] = useState<RPMUser | null>(null);
+  const [avatarId, setAvatarId] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
-      const saved = await AsyncStorage.getItem(AVATAR_STORAGE_KEY);
-      if (saved) {
-        setAvatarUrl(saved);
+      const savedUrl = await AsyncStorage.getItem(AVATAR_STORAGE_KEY);
+      if (savedUrl) {
+        setAvatarUrl(savedUrl);
+      }
+
+      const storedUser = await AsyncStorage.getItem(USER_KEY);
+      let userInfo: RPMUser;
+      if (storedUser) {
+        userInfo = JSON.parse(storedUser);
+      } else {
+        userInfo = await ReadyPlayerMe.createAnonymousUser(APP_ID);
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(userInfo));
+      }
+      setRpmUser(userInfo);
+
+      let storedAvatarId = await AsyncStorage.getItem(AVATAR_ID_KEY);
+      if (!storedAvatarId) {
+        const templates = await ReadyPlayerMe.getTemplates(userInfo.token);
+        storedAvatarId = await ReadyPlayerMe.createDraftAvatar(
+          userInfo.token,
+          templates[0].id,
+          SUBDOMAIN
+        );
+        await ReadyPlayerMe.saveAvatar(userInfo.token, storedAvatarId);
+        await AsyncStorage.setItem(AVATAR_ID_KEY, storedAvatarId);
+      }
+      setAvatarId(storedAvatarId);
+
+      if (!savedUrl) {
+        const url = await ReadyPlayerMe.getAvatarGLBUrl(storedAvatarId);
+        setAvatarUrl(url);
+        await AsyncStorage.setItem(AVATAR_STORAGE_KEY, url);
       }
     })();
   }, []);
 
-  const handleMessage = (event: any) => {
+  const handleMessage = async (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data.eventName === "v1.avatar.exported") {
-        const url = data.data.url;
+      if (data.eventName === "v1.avatar.exported" && rpmUser) {
+        const id = data.data.avatarId || data.data.id;
+        await ReadyPlayerMe.saveAvatar(rpmUser.token, id);
+        const url = await ReadyPlayerMe.getAvatarGLBUrl(id);
         setAvatarUrl(url);
-        AsyncStorage.setItem(AVATAR_STORAGE_KEY, url);
+        setAvatarId(id);
+        await AsyncStorage.multiSet([
+          [AVATAR_STORAGE_KEY, url],
+          [AVATAR_ID_KEY, id],
+        ]);
         setShowCreator(false);
       }
     } catch {}
   };
 
-  if (showCreator) {
-    const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache`;
+  if (showCreator && rpmUser && avatarId) {
+    const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache&userId=${rpmUser.id}&avatarId=${avatarId}&token=${rpmUser.token}`;
     return (
       <WebView
         ref={webviewRef}
