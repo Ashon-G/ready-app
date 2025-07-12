@@ -84,11 +84,11 @@ export default class ReadyPlayerMe {
     return json.data;
   }
 
-  static async getAvatarGLBUrl(avatarId: string, preview = false): Promise<string> {
+  static async getAvatarGLBUrl(shortCode: string, preview = false): Promise<string> {
     if (preview) {
-      return `${API_BASE_V2}/avatars/${avatarId}.glb?preview=true`;
+      return `${API_BASE_V2}/avatars/${shortCode}.glb?preview=true`;
     } else {
-      return `${MODEL_BASE}/${avatarId}.glb`;
+      return `${MODEL_BASE}/${shortCode}.glb`;
     }
   }
 

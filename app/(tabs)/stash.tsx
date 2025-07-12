@@ -37,6 +37,7 @@ const SUBDOMAIN = "arcadia-next";
 const APP_ID = "683c0f07d8f16f5cf857a864";
 const AVATAR_STORAGE_KEY = "@avatar:url";
 const AVATAR_ID_KEY = "@avatar:id";
+const AVATAR_SHORT_KEY = "@avatar:short";
 const USER_KEY = "@rpm:user";
 const DEFAULT_AVATAR_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBak5aHgqR_B9odfm1jIehKDYNzyvFBfb48rHF-46hQRuPE7AvUarl-d2XwMC5C3m_3EwJgiT2vsNwoFOQ32sqBO_04aIwsg13yzoWNNs6bLYu5xLtiOIAZEQ862qMKwXDOphauSD3mGeQ0q-Y2tVfhHmUd_EsHqEUvG4S3_MSPCOrU9-VpokgOiaKK_BYI6nwA4syqynWSOJVl9tXuYF-LGybc0pbpkdxSRubhSjir2tZnM86A4OaIhPUzAmAbdJfkO8YpqMjWiokr";
@@ -57,6 +58,7 @@ export default function StashScreen() {
 
   const [rpmUser, setRpmUser] = useState<RPMUser | null>(null);
   const [avatarId, setAvatarId] = useState<string | null>(null);
+  const [avatarShort, setAvatarShort] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -76,20 +78,27 @@ export default function StashScreen() {
       setRpmUser(userInfo);
 
       let storedAvatarId = await AsyncStorage.getItem(AVATAR_ID_KEY);
-      if (!storedAvatarId) {
+      let storedShort = await AsyncStorage.getItem(AVATAR_SHORT_KEY);
+      if (!storedAvatarId || !storedShort) {
         const templates = await ReadyPlayerMe.getTemplates(userInfo.token);
         storedAvatarId = await ReadyPlayerMe.createDraftAvatar(
           userInfo.token,
           templates[0].id,
           SUBDOMAIN
         );
-        await ReadyPlayerMe.saveAvatar(userInfo.token, storedAvatarId);
-        await AsyncStorage.setItem(AVATAR_ID_KEY, storedAvatarId);
+        const saved = await ReadyPlayerMe.saveAvatar(userInfo.token, storedAvatarId);
+        storedShort =
+          saved?.shortCode || saved?.shortcode || saved?.short_code || saved?.id || storedAvatarId;
+        await AsyncStorage.multiSet([
+          [AVATAR_ID_KEY, storedAvatarId],
+          [AVATAR_SHORT_KEY, storedShort],
+        ]);
       }
       setAvatarId(storedAvatarId);
+      setAvatarShort(storedShort);
 
-      if (!savedUrl) {
-        const url = await ReadyPlayerMe.getAvatarGLBUrl(storedAvatarId);
+      if (!savedUrl && storedShort) {
+        const url = await ReadyPlayerMe.getAvatarGLBUrl(storedShort);
         setAvatarUrl(url);
         await AsyncStorage.setItem(AVATAR_STORAGE_KEY, url);
       }
@@ -101,13 +110,19 @@ export default function StashScreen() {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.eventName === "v1.avatar.exported" && rpmUser) {
         const id = data.data.avatarId || data.data.id;
-        await ReadyPlayerMe.saveAvatar(rpmUser.token, id);
-        const url = await ReadyPlayerMe.getAvatarGLBUrl(id);
+        const short =
+          data.data.shortCode || data.data.shortcode || data.data.short_code;
+        const saved = await ReadyPlayerMe.saveAvatar(rpmUser.token, id);
+        const finalShort =
+          short || saved?.shortCode || saved?.shortcode || saved?.short_code || id;
+        const url = await ReadyPlayerMe.getAvatarGLBUrl(finalShort);
         setAvatarUrl(url);
         setAvatarId(id);
+        setAvatarShort(finalShort);
         await AsyncStorage.multiSet([
           [AVATAR_STORAGE_KEY, url],
           [AVATAR_ID_KEY, id],
+          [AVATAR_SHORT_KEY, finalShort],
         ]);
         setShowCreator(false);
       }
