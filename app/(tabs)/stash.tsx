@@ -115,14 +115,14 @@ export default function StashScreen() {
   };
 
   if (showCreator && rpmUser && avatarId) {
-    const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache&userId=${rpmUser.id}&avatarId=${avatarId}&token=${rpmUser.token}`;
+    const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache&userId=${rpmUser.id}&avatarId=${avatarId}`;
     return (
       <WebView
         ref={webviewRef}
         originWhitelist={["*"]}
         source={{ uri }}
         onMessage={handleMessage}
-        injectedJavaScript={`(function() {\n  window.addEventListener('message', function(e) {\n    try {\n      const d = JSON.parse(e.data);\n      if (d.source !== 'readyplayerme') return;\n      if (d.eventName === 'v1.frame.ready') {\n        window.postMessage(JSON.stringify({ target: 'readyplayerme', type: 'subscribe', eventName: 'v1.avatar.exported' }), '*');\n      } else if (d.eventName === 'v1.avatar.exported') {\n        window.ReactNativeWebView.postMessage(e.data);\n      }\n    } catch (err) {}\n  });\n})();`}
+        injectedJavaScript={`(function() {\n  window.addEventListener('message', function(e) {\n    try {\n      const d = JSON.parse(e.data);\n      if (d.source !== 'readyplayerme') return;\n      if (d.eventName === 'v1.frame.ready') {\n        window.postMessage(JSON.stringify({ target: 'readyplayerme', type: 'subscribe', eventName: 'v1.avatar.exported' }), '*');\n        window.postMessage(JSON.stringify({ target: 'readyplayerme', type: 'load-user', userId: '${rpmUser.id}', accessToken: '${rpmUser.token}' }), '*');\n      } else if (d.eventName === 'v1.avatar.exported') {\n        window.ReactNativeWebView.postMessage(e.data);\n      }\n    } catch (err) {}\n  });\n})();`}
         style={{ flex: 1 }}
       />
     );
