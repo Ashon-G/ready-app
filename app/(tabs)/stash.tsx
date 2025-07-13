@@ -8,7 +8,6 @@ import {
   Image,
   StyleSheet,
   Dimensions,
-  Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { GLView } from "expo-gl";
@@ -42,6 +41,63 @@ const USER_ID_KEY = "rpm_user_id";
 const DEFAULT_GLB_URL =
   "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb";
 
+const AVATAR_CREATOR_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avatar Creator</title>
+  <style>
+    html, body, .frame { width: 100%; height: 100%; margin: 0; padding: 20px; }
+    .warning { background-color: #df68a2; padding: 3px; border-radius: 5px; color: white; }
+  </style>
+</head>
+<body>
+  <h2>Ready Player Me iframe example</h2>
+  <ul>
+    <li>Click the "Open Ready Player Me" button.</li>
+    <li>Create an avatar and click the "Done" button when you're done customizing.</li>
+    <li>After creation, this parent page receives the URL to the avatar.</li>
+    <li>The Ready Player Me window closes and the URL is displayed.</li>
+  </ul>
+  <p class="warning">
+    If you have a subdomain, replace the 'demo' subdomain in the iframe source URL with yours.
+  </p>
+  <input type="button" value="Open Ready Player Me" onClick="displayIframe()" />
+  <p id="avatarUrl">Avatar URL:</p>
+  <iframe id="frame" class="frame" allow="camera *; microphone *; clipboard-write" hidden></iframe>
+  <script>
+    const subdomain = '${SUBDOMAIN}';
+    const frame = document.getElementById('frame');
+    frame.src = 'https://' + subdomain + '.readyplayer.me/avatar?sk_live_kK8UbpeDZbZi03of0JWUuzV10VG0oSfTVQoY';
+    window.addEventListener('message', subscribe);
+    document.addEventListener('message', subscribe);
+    function subscribe(event) {
+      const json = parse(event);
+      if (json?.source !== 'readyplayerme') return;
+      if (json.eventName === 'v1.frame.ready') {
+        frame.contentWindow.postMessage(
+          JSON.stringify({ target: 'readyplayerme', type: 'subscribe', eventName: 'v1.**' }),
+          '*'
+        );
+      }
+      if (json.eventName === 'v1.avatar.exported') {
+        window.ReactNativeWebView && window.ReactNativeWebView.postMessage(json.data.url);
+        document.getElementById('avatarUrl').innerHTML = `Avatar URL: ${json.data.url}`;
+        document.getElementById('frame').hidden = true;
+      }
+      if (json.eventName === 'v1.user.set') {
+        console.log(`User with id ${json.data.id} set: ${JSON.stringify(json)}`);
+      }
+    }
+    function parse(event) {
+      try { return JSON.parse(event.data); } catch (error) { return null; }
+    }
+    function displayIframe() { document.getElementById('frame').hidden = false; }
+  </script>
+</body>
+</html>`;
+
 export default function StashScreen() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [user] = useState(DEFAULT_USER);
@@ -74,9 +130,11 @@ export default function StashScreen() {
   }, []);
 
   const handleMessage = async (event: any) => {
+    const raw = event.nativeEvent?.data ?? event.data;
+    if (!raw) return;
     try {
-      const data = JSON.parse(event.nativeEvent.data);
-      if (data.eventName === "v1.avatar.exported") {
+      const data = JSON.parse(raw);
+      if (data.eventName === "v1.avatar.exported" && data.data?.url) {
         const url = data.data.url.replace(
           "https://api.readyplayer.me",
           "https://models.readyplayer.me"
@@ -84,30 +142,27 @@ export default function StashScreen() {
         setAvatarUrl(url);
         await AsyncStorage.setItem(AVATAR_URL_KEY, url);
         setShowCreator(false);
+        return;
       }
-    } catch {}
+    } catch {
+      if (typeof raw === "string" && raw.startsWith("http")) {
+        const url = raw.replace(
+          "https://api.readyplayer.me",
+          "https://models.readyplayer.me"
+        );
+        setAvatarUrl(url);
+        await AsyncStorage.setItem(AVATAR_URL_KEY, url);
+        setShowCreator(false);
+      }
+    }
   };
 
   if (showCreator) {
-    const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache`;
-
-    if (Platform.OS === "web") {
-      return (
-        <SafeAreaView style={{ flex: 1 }}>
-          <iframe
-            src={uri}
-            style={{ width: "100%", height: "100%", border: "none" }}
-            sandbox="allow-scripts allow-same-origin allow-forms"
-          />
-        </SafeAreaView>
-      );
-    }
-
     return (
       <WebView
         ref={webviewRef}
         originWhitelist={["*"]}
-        source={{ uri }}
+        source={{ html: AVATAR_CREATOR_HTML }}
         onMessage={handleMessage}
         style={{ flex: 1 }}
       />
