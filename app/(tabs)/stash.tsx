@@ -30,69 +30,12 @@ const DEFAULT_USER = {
 };
 
 const APP_ID = "683c0f07d8f16f5cf857a864";
-const SUBDOMAIN = "arcadia-next";
 const AVATAR_URL_KEY = "rpm_avatar_url";
 const USER_TOKEN_KEY = "rpm_token";
 const USER_ID_KEY = "rpm_user_id";
 const DEFAULT_GLB_URL =
   "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb";
 
-const AVATAR_CREATOR_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avatar Creator</title>
-  <style>
-    html, body, .frame { width: 100%; height: 100%; margin: 0; padding: 20px; }
-    .warning { background-color: #df68a2; padding: 3px; border-radius: 5px; color: white; }
-  </style>
-</head>
-<body>
-  <h2>Ready Player Me iframe example</h2>
-  <ul>
-    <li>Click the "Open Ready Player Me" button.</li>
-    <li>Create an avatar and click the "Done" button when you're done customizing.</li>
-    <li>After creation, this parent page receives the URL to the avatar.</li>
-    <li>The Ready Player Me window closes and the URL is displayed.</li>
-  </ul>
-  <p class="warning">
-    If you have a subdomain, replace the 'demo' subdomain in the iframe source URL with yours.
-  </p>
-  <input type="button" value="Open Ready Player Me" onClick="displayIframe()" />
-  <p id="avatarUrl">Avatar URL:</p>
-  <iframe id="frame" class="frame" allow="camera *; microphone *; clipboard-write" hidden></iframe>
-  <script>
-    const subdomain = '${SUBDOMAIN}';
-    const frame = document.getElementById('frame');
-    frame.src = 'https://' + subdomain + '.readyplayer.me/avatar?sk_live_kK8UbpeDZbZi03of0JWUuzV10VG0oSfTVQoY';
-    window.addEventListener('message', subscribe);
-    document.addEventListener('message', subscribe);
-    function subscribe(event) {
-      const json = parse(event);
-      if (json?.source !== 'readyplayerme') return;
-      if (json.eventName === 'v1.frame.ready') {
-        frame.contentWindow.postMessage(
-          JSON.stringify({ target: 'readyplayerme', type: 'subscribe', eventName: 'v1.**' }),
-          '*'
-        );
-      }
-      if (json.eventName === 'v1.avatar.exported') {
-        window.ReactNativeWebView && window.ReactNativeWebView.postMessage(json.data.url);
-        document.getElementById('avatarUrl').innerHTML = `Avatar URL: ${json.data.url}`;
-        document.getElementById('frame').hidden = true;
-      }
-      if (json.eventName === 'v1.user.set') {
-        console.log(`User with id ${json.data.id} set: ${JSON.stringify(json)}`);
-      }
-    }
-    function parse(event) {
-      try { return JSON.parse(event.data); } catch (error) { return null; }
-    }
-    function displayIframe() { document.getElementById('frame').hidden = false; }
-  </script>
-</body>
-</html>`;
 
 export default function StashScreen() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -158,7 +101,7 @@ export default function StashScreen() {
       <WebView
         ref={webviewRef}
         originWhitelist={["*"]}
-        source={{ html: AVATAR_CREATOR_HTML }}
+        source={require("../../assets/avatarCreator.html")}
         onMessage={handleMessage}
         style={{ flex: 1 }}
       />
