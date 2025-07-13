@@ -59,7 +59,11 @@
             }
 
             if (json.eventName === 'v1.avatar.exported') {
-                window.ReactNativeWebView && window.ReactNativeWebView.postMessage(json.data.url);
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(json.data.url);
+                } else if (window.parent) {
+                    window.parent.postMessage(json.data.url, '*');
+                }
                 document.getElementById('avatarUrl').innerHTML = `Avatar URL: ${json.data.url}`;
                 document.getElementById('frame').hidden = true;
             }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
@@ -30,6 +31,7 @@ const DEFAULT_USER = {
 };
 
 const APP_ID = "683c0f07d8f16f5cf857a864";
+const SUBDOMAIN = "arcadia-next";
 const AVATAR_URL_KEY = "rpm_avatar_url";
 const USER_TOKEN_KEY = "rpm_token";
 const USER_ID_KEY = "rpm_user_id";
@@ -68,7 +70,14 @@ export default function StashScreen() {
     })();
   }, []);
 
-  const handleMessage = async (event: any) => {
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      window.addEventListener("message", handleMessage as any);
+      return () => window.removeEventListener("message", handleMessage as any);
+    }
+  }, [handleMessage]);
+
+  const handleMessage = useCallback(async (event: any) => {
     const raw = event.nativeEvent?.data ?? event.data;
     if (!raw) return;
     try {
@@ -94,9 +103,21 @@ export default function StashScreen() {
         setShowCreator(false);
       }
     }
-  };
+  }, []);
 
   if (showCreator) {
+    if (Platform.OS === "web") {
+      const uri = `https://${SUBDOMAIN}.readyplayer.me/avatar?frameApi&clearCache`;
+      return (
+        <SafeAreaView style={{ flex: 1 }}>
+          <iframe
+            src={uri}
+            style={{ width: "100%", height: "100%", border: "none" }}
+            sandbox="allow-scripts allow-same-origin allow-forms"
+          />
+        </SafeAreaView>
+      );
+    }
     return (
       <WebView
         ref={webviewRef}
@@ -276,5 +297,3 @@ const styles = StyleSheet.create({
   rankRight: { alignItems: "flex-end" },
   rankCoins: { color: "#f97316", fontSize: 20, fontWeight: "bold" },
 });
-
-export {};
