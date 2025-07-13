@@ -77,8 +77,12 @@ export default function StashScreen() {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.eventName === "v1.avatar.exported") {
-        setAvatarUrl(data.data.url);
-        await AsyncStorage.setItem(AVATAR_URL_KEY, data.data.url);
+        const url = data.data.url.replace(
+          "https://api.readyplayer.me",
+          "https://models.readyplayer.me"
+        );
+        setAvatarUrl(url);
+        await AsyncStorage.setItem(AVATAR_URL_KEY, url);
         setShowCreator(false);
       }
     } catch {}
@@ -233,6 +237,7 @@ function GLBModelViewer({ modelUrl }: GLBModelViewerProps) {
 
   return (
     <GLView
+      key={modelUrl}
       style={styles.glView}
       onContextCreate={async (gl) => {
         const { drawingBufferWidth: w, drawingBufferHeight: h } = gl;
