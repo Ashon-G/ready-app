@@ -1,417 +1,194 @@
-Here's a clean and organized `agents.md` file for integrating the Ready Player Me API in an **Expo** app:
+# GET - 3D Avatar
+
+Get a 3D avatar `.glb` file with desired performance and configuration settings.
+All avatars are hosted at:
+
+```
+https://models.readyplayer.me
+```
+
+> ✅ Always use `https://models.readyplayer.me` for avatar requests instead of `https://api.readyplayer.me`.
 
 ---
 
-# `agents.md` – Ready Player Me API Integration Guide (Expo)
+## Endpoint
 
-This document outlines the step-by-step process for integrating Ready Player Me into your Expo app, allowing users to create anonymous accounts, generate and customize avatars, and fetch them as GLB models.
-
----
-
-## Credentials
-
-API Key:
-sk_live_dMg2ABIyW9-9HziFR53S_5FtUzbY937eS6wF 
-
-Subdomain:
-arcadia-next.readyplayer.me
-
-App ID:
-683c0f07d8f16f5cf857a864
-
-Org ID:
-683c0f06108eae0090c2b319
-
----
-
-## 🔐 1. Create Anonymous User
-
-### Endpoint
+**Get an avatar `.glb` by ID:**
 
 ```
-POST https://api.readyplayer.me/v1/users
-```
-
-### Request Body
-
-```json
-{
-  "data": {
-    "applicationId": "[your-app-id]"
-  }
-}
-```
-
-### Response
-
-* Returns:
-
-  * `user.id`
-  * `user.token`
-
----
-
-## 🎭 2. Create a Default Avatar
-
-### Step 2.1: Get All Templates
-
-**Endpoint**
-
-```
-GET https://api.readyplayer.me/v2/avatars/templates
-```
-
-**Headers**
-
-```
-Authorization: Bearer [token]
+GET https://models.readyplayer.me/avatarId.glb
 ```
 
 ---
 
-### Step 2.2: Create Draft Avatar From Template
+## Path Parameters
 
-**Endpoint**
-
-```
-POST https://api.readyplayer.me/v2/avatars/templates/[template-id]
-```
-
-**Headers**
-
-```
-Authorization: Bearer [token]
-```
-
-**Request Body**
-
-```json
-{
-  "partner": "[subdomain]",
-  "bodyType": "fullbody"
-}
-```
-
-**Response**
-
-* Returns `avatar.id`
+| Name           | Type   | Description                                      |
+| -------------- | ------ | ------------------------------------------------ |
+| `avatarId.glb` | String | ID of the avatar (must include `.glb` extension) |
 
 ---
 
-### Step 2.3: Fetch Draft Avatar as GLB
+## Query Parameters
 
-**Endpoint**
-
-```
-GET https://api.readyplayer.me/v2/avatars/[avatar-id].glb?preview=true
-```
-
-**Response**
-
-* Returns GLB binary
-
----
-
-### Step 2.4: Save Draft Avatar
-
-**Endpoint**
-
-```
-PUT https://api.readyplayer.me/v2/avatars/[avatar-id]
-```
-
-**Headers**
-
-```
-Authorization: Bearer [token]
-```
+| Name                                   | Type    | Description                                   |
+| -------------------------------------- | ------- | --------------------------------------------- |
+| `quality`                              | String  | `low`, `medium`, or `high` quality presets    |
+| `meshLod` *(Deprecated)*               | Int     | Controls triangle count on equipped assets    |
+| `textureSizeLimit`                     | Int     | Upper limit for texture resolution (px)       |
+| `textureAtlas`                         | Int     | Generates texture atlas of desired resolution |
+| `textureChannels`                      | String  | Comma-separated list of texture channels      |
+| `morphTargets`                         | String  | Comma-separated list of morph targets         |
+| `useDracoMeshCompression`              | Boolean | Compress with Draco (reduces size)            |
+| `useMeshOptCompression` *(Deprecated)* | Boolean | Compress with Mesh Optimization               |
+| `useQuantizeMeshOptCompression`        | Boolean | Quantize + Mesh Opt Compression               |
+| `pose`                                 | String  | Pose for full-body avatar: `A` or `T`         |
+| `useHands`                             | Boolean | Include hands for half-body avatars           |
+| `textureFormat`                        | String  | Format all textures: `webp`, `jpeg`, `png`    |
+| `lod`                                  | Int     | Control triangle count of entire avatar       |
+| `textureQuality`                       | String  | Texture quality: `low`, `medium`, `high`      |
 
 ---
 
-## 🧰 3. Fetch Equipable Assets
+## Response Codes
 
-**Endpoint**
-
-```
-GET https://api.readyplayer.me/v1/assets?filter=usable-by-user-and-app&filterApplicationId=[app-id]&filterUserId=[user-id]
-```
-
-**Headers**
-
-```
-Authorization: Bearer [token]
-X-APP-ID: [app-id]
-```
-
-**Response**
-
-* Array of asset objects with fields like:
-
-  * `id`
-  * `type`
-  * `gender`
-  * `iconUrl`
+* **`200 OK`**: Model `.glb` returned
+* **`404 Not Found`**: Avatar not available
 
 ---
 
-## 🎒 4. Equip Asset to Draft Avatar
+## Notes
 
-**Endpoint**
-
-```
-PATCH https://api.readyplayer.me/v2/avatars/[avatar-id]
-```
-
-**Request Body Example**
-
-```json
-{
-  "outfit": "[asset-id]"
-}
-```
-
-**Response**
-
-* Returns updated `avatar.assets`
+* Always include `.glb` in the URL, or a 404 will occur.
+* Avatar IDs or short codes are returned via `postMessage` from Ready Player Me.
+* Default values apply unless parameters are explicitly set.
 
 ---
 
-## 💾 5. Save Updated Avatar
+## Examples
 
-**Endpoint**
-
-```
-PUT https://api.readyplayer.me/v2/avatars/[avatar-id]
-```
-
-**Headers**
+### Base Avatar
 
 ```
-Authorization: Bearer [token]
+https://models.readyplayer.me/65a8dba831b23abb4f401bae.glb
 ```
 
----
-
-## 📦 6. Fetch Final Saved Avatar
-
-**Endpoint**
+### With LOD and No Texture Atlas
 
 ```
-GET https://models.readyplayer.me/[avatar-id].glb
+https://models.readyplayer.me/65a8dba831b23abb4f401bae.glb?lod=2&textureAtlas=none
 ```
 
----
-
-## 🔄 Optional: Merge Anonymous User to RPM Account
-
-### Step 1: Request Login Code
-
-**Endpoint**
+### Quality Preset Examples
 
 ```
-POST https://api.readyplayer.me/v1/auth/request-login-code
+?quality=high
+?quality=medium
+?quality=low
+?quality=low&meshLod=0
 ```
 
-**Body**
+### LOD (Triangle Count)
 
-```json
-{
-  "email": "[user@example.com]"
-}
+| Value | Description            |
+| ----- | ---------------------- |
+| `0`   | No reduction (default) |
+| `1`   | 50% triangles          |
+| `2`   | 25% triangles          |
+
+### Texture Size Limit
+
+| Min | Max (default) | Note                  |
+| --- | ------------- | --------------------- |
+| 256 | 1024          | Must be multiple of 2 |
+
+### Texture Quality
+
+| Value    | Description                       |
+| -------- | --------------------------------- |
+| `low`    | Lower quality for distant avatars |
+| `medium` | Default                           |
+| `high`   | Full quality for all assets       |
+
+### Texture Atlas
+
+| Value  | Description        |
+| ------ | ------------------ |
+| `none` | No atlas (default) |
+| `256`  | 256×256px atlas    |
+| `512`  | 512×512px atlas    |
+| `1024` | 1024×1024px atlas  |
+
+### Texture Format
+
+```
+?textureFormat=webp
+?textureFormat=jpeg
+?textureFormat=png
 ```
 
----
+> ⚠️ WebP is not fully supported in Unity/Unreal SDKs.
 
-### Step 2: Login and Merge
-
-**Endpoint**
+### Texture Channels
 
 ```
-POST https://api.readyplayer.me/v1/auth/login
+?textureChannels=baseColor,normal,emissive
 ```
 
-**Body**
+Available values:
 
-```json
-{
-  "code": "[login-code]",
-  "id": "[anonymous-user-id]" // optional
-}
+* `baseColor`
+* `normal`
+* `metallicRoughness`
+* `emissive`
+* `occlusion`
+* `none`
+
+### Morph Targets
+
+```
+?morphTargets=ARKit,Oculus Visemes
 ```
 
----
+Available values:
 
-## ⚠️ Notes
+* `Default`
+* `ARKit`
+* `Oculus Visemes`
+* Other supported targets
 
-* Always securely store the `token` on the client (e.g., AsyncStorage).
-* Token never expires but **cannot** be recovered if lost (anonymous sessions).
-* GLB files can be displayed using Three.js + `expo-gl` + `expo-three`.
+### Pose
 
----
-
-## SDK Wrapper
-
----
-Here’s a clean, reusable **Ready Player Me SDK wrapper** for your **Expo app**, written in **TypeScript**. It centralizes all Ready Player Me API interactions into a single module with easy-to-use methods.
-
----
-
-### 📁 File: `lib/ReadyPlayerMe.ts`
-
-```ts
-// lib/ReadyPlayerMe.ts
-
-const API_BASE_V1 = "https://api.readyplayer.me/v1";
-const API_BASE_V2 = "https://api.readyplayer.me/v2";
-const MODEL_BASE = "https://models.readyplayer.me";
-
-export interface RPMUser {
-  id: string;
-  token: string;
-}
-
-export interface AvatarTemplate {
-  id: string;
-  gender: string;
-  imageUrl: string;
-}
-
-export interface Asset {
-  id: string;
-  type: string;
-  iconUrl: string;
-  gender: string;
-}
-
-export default class ReadyPlayerMe {
-  static async createAnonymousUser(appId: string): Promise<RPMUser> {
-    const res = await fetch(`${API_BASE_V1}/users`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: { applicationId: appId } }),
-    });
-
-    const json = await res.json();
-    return {
-      id: json.data.id,
-      token: json.data.token,
-    };
-  }
-
-  static async getTemplates(token: string): Promise<AvatarTemplate[]> {
-    const res = await fetch(`${API_BASE_V2}/avatars/templates`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const json = await res.json();
-    return json.data;
-  }
-
-  static async createDraftAvatar(
-    token: string,
-    templateId: string,
-    partner: string
-  ): Promise<string> {
-    const res = await fetch(
-      `${API_BASE_V2}/avatars/templates/${templateId}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          partner,
-          bodyType: "fullbody",
-        }),
-      }
-    );
-
-    const json = await res.json();
-    return json.data.id;
-  }
-
-  static async saveAvatar(token: string, avatarId: string) {
-    const res = await fetch(`${API_BASE_V2}/avatars/${avatarId}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const json = await res.json();
-    return json.data;
-  }
-
-  static async getAvatarGLBUrl(avatarId: string, preview = false): Promise<string> {
-    if (preview) {
-      return `${API_BASE_V2}/avatars/${avatarId}.glb?preview=true`;
-    } else {
-      return `${MODEL_BASE}/${avatarId}.glb`;
-    }
-  }
-
-  static async getAssets(
-    appId: string,
-    userId: string,
-    token: string
-  ): Promise<Asset[]> {
-    const url = `${API_BASE_V1}/assets?filter=usable-by-user-and-app&filterApplicationId=${appId}&filterUserId=${userId}`;
-    const res = await fetch(url, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "X-APP-ID": appId,
-      },
-    });
-
-    const json = await res.json();
-    return json.data;
-  }
-
-  static async equipAsset(
-    token: string,
-    avatarId: string,
-    asset: { [key: string]: string }
-  ) {
-    const res = await fetch(`${API_BASE_V2}/avatars/${avatarId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(asset),
-    });
-
-    const json = await res.json();
-    return json.data;
-  }
-}
+```
+?pose=A       // Default
+?pose=T       // T-pose
 ```
 
----
+### Compression Options
 
-### ✅ Example Usage
+* **Draco**
 
-```ts
-import ReadyPlayerMe from "./lib/ReadyPlayerMe";
+  ```
+  ?useDracoMeshCompression=true
+  ```
 
-const initAvatarFlow = async () => {
-  const appId = "your-app-id";
-  const partner = "your-subdomain";
+* **MeshOpt**
 
-  const user = await ReadyPlayerMe.createAnonymousUser(appId);
-  const templates = await ReadyPlayerMe.getTemplates(user.token);
-  const avatarId = await ReadyPlayerMe.createDraftAvatar(user.token, templates[0].id, partner);
+  ```
+  ?useMeshOptCompression=true
+  ```
 
-  const glbUrl = await ReadyPlayerMe.getAvatarGLBUrl(avatarId, true);
-  console.log("Preview GLB:", glbUrl);
+* **Quantize MeshOpt**
 
-  await ReadyPlayerMe.saveAvatar(user.token, avatarId);
-  const finalGLB = await ReadyPlayerMe.getAvatarGLBUrl(avatarId);
-  console.log("Saved Avatar:", finalGLB);
-};
+  ```
+  ?useQuantizeMeshOptCompression=true
+  ```
+
+### Hands
+
+```
+?useHands=true   // Include hands (default)
+?useHands=false  // No hands
 ```
 
 
