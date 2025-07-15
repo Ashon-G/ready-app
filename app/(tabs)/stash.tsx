@@ -23,7 +23,6 @@ StashScreen.options = {
   headerShown: false,
 };
 
-
 const DEFAULT_USER = {
   username: "@Ashon",
   coins: "1,155",
@@ -38,7 +37,6 @@ const USER_ID_KEY = "rpm_user_id";
 const DEFAULT_GLB_URL =
   "https://readyplayerme-assets.s3.amazonaws.com/animations/visage/female.glb";
 
-
 export default function StashScreen() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [user] = useState(DEFAULT_USER);
@@ -49,33 +47,6 @@ export default function StashScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showCreator, setShowCreator] = useState(false);
   const webviewRef = useRef<WebView>(null);
-
-  useEffect(() => {
-    (async () => {
-      const storedUrl = await AsyncStorage.getItem(AVATAR_URL_KEY);
-      if (storedUrl) setAvatarUrl(storedUrl);
-
-      const token = await AsyncStorage.getItem(USER_TOKEN_KEY);
-      const id = await AsyncStorage.getItem(USER_ID_KEY);
-      if (token && id) {
-        setRpmUser({ id, token });
-      } else {
-        const newUser = await ReadyPlayerMe.createAnonymousUser(APP_ID);
-        setRpmUser(newUser);
-        await AsyncStorage.multiSet([
-          [USER_ID_KEY, newUser.id],
-          [USER_TOKEN_KEY, newUser.token],
-        ]);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (Platform.OS === "web") {
-      window.addEventListener("message", handleMessage as any);
-      return () => window.removeEventListener("message", handleMessage as any);
-    }
-  }, [handleMessage]);
 
   const handleMessage = useCallback(async (event: any) => {
     const raw = event.nativeEvent?.data ?? event.data;
@@ -104,6 +75,33 @@ export default function StashScreen() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const storedUrl = await AsyncStorage.getItem(AVATAR_URL_KEY);
+      if (storedUrl) setAvatarUrl(storedUrl);
+
+      const token = await AsyncStorage.getItem(USER_TOKEN_KEY);
+      const id = await AsyncStorage.getItem(USER_ID_KEY);
+      if (token && id) {
+        setRpmUser({ id, token });
+      } else {
+        const newUser = await ReadyPlayerMe.createAnonymousUser(APP_ID);
+        setRpmUser(newUser);
+        await AsyncStorage.multiSet([
+          [USER_ID_KEY, newUser.id],
+          [USER_TOKEN_KEY, newUser.token],
+        ]);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      window.addEventListener("message", handleMessage as any);
+      return () => window.removeEventListener("message", handleMessage as any);
+    }
+  }, [handleMessage]);
 
   if (showCreator) {
     if (Platform.OS === "web") {
@@ -210,7 +208,6 @@ export default function StashScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   safeContainer: { flex: 1, backgroundColor: "#fff" },
