@@ -31,6 +31,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Tab One",
+          headerShown: false, // 👈 disables the header for this tab
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
           headerRight: () => (
             <Link href="/notifications" asChild>
