@@ -29,3 +29,26 @@ https://live-api.cpx-research.com/api/get-surveys.php?app_id=APP_ID&ext_user_id=
 ```
 
 Replace each placeholder with your values. The secure hash is computed as `md5(userId + '-' + SECURE_HASH)`.
+
+## CPX Postback Receiver
+
+1. Deploy the Firebase function in `functions/index.ts`:
+
+```bash
+firebase deploy --only functions
+```
+
+2. Set the CPX secure hash for verification:
+
+```bash
+firebase functions:config:set cpx.secure_hash="<your secure hash>"
+```
+
+3. Configure the CPX dashboard to call your function URL. It will look like:
+
+```
+https://<REGION>-<PROJECT>.cloudfunctions.net/handlePostback?ext_user_id=USER&status=completed&reward_value=0.5&hash=HASH
+```
+
+The function increments the user's `earnings` field in Firestore whenever a survey is completed.
+
