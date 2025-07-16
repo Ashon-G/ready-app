@@ -7,5 +7,5 @@
     "sourceMap": false,
     "target": "es2017"
   },
-  "include": ["index.ts"]
+  "include": ["src"]
 }
