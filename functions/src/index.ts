@@ -2,7 +2,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import * as logger from "firebase-functions/logger";
-import md5 from "crypto-js/md5";
+import sha256 from "crypto-js/sha256";
 
 initializeApp();
 const db = getFirestore();
@@ -23,7 +23,7 @@ export const handlePostback = onRequest(
       return;
     }
 
-    const expectedHash = md5(`${ext_user_id}-${SECURE_HASH}`).toString();
+    const expectedHash = sha256(`${ext_user_id}-${SECURE_HASH}`).toString();
     if (hash !== expectedHash) {
       res.status(403).send("Invalid hash");
       return;
