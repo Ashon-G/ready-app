@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
+import useProtectedRoute from "@/lib/useProtectedRoute";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -18,8 +19,8 @@ export {
 } from "expo-router";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/notifications` keeps a back button present.
-  initialRouteName: "(tabs)",
+  // Start the app on the login screen
+  initialRouteName: "auth/login",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -51,11 +52,15 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  useProtectedRoute();
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ title: "Settings" }} />
         <Stack.Screen
           name="Notifications"
           options={{ presentation: "modal" }}

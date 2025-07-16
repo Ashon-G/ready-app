@@ -24,22 +24,7 @@ export default function HomeScreen() {
         style={styles.scrollContainer}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
-        {/* Balance */}
-        <View style={styles.card}>
-          <View style={styles.balanceRow}>
-            <Image
-              source={{
-                uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/SbVinpZIfd/iae46afr_expires_30_days.png",
-              }}
-              style={styles.walletImage}
-              resizeMode="stretch"
-            />
-            <Text style={styles.balanceText}>$2.97</Text>
-          </View>
-          <View style={styles.balanceBarContainer}>
-            <View style={styles.balanceBar} />
-          </View>
-        </View>
+       
 
         {/* Video Bonus */}
         <TouchableOpacity onPress={() => setAdVisible(true)}>
