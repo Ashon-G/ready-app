@@ -18,8 +18,8 @@ export {
 } from "expo-router";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/notifications` keeps a back button present.
-  initialRouteName: "(tabs)",
+  // Start the app on the login screen
+  initialRouteName: "auth/login",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -55,7 +55,10 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ title: "Settings" }} />
         <Stack.Screen
           name="Notifications"
           options={{ presentation: "modal" }}
