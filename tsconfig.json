@@ -4,6 +4,8 @@
     "paths": {
       "@/*": ["./*"] // ✅ allows "@/components/..." etc.
     },
+    "moduleResolution": "node",
+    "types": ["expo", "jest"],
   },
   "extends": "expo/tsconfig.base"
 }
