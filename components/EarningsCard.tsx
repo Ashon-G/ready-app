@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ImageBackground,
   StyleSheet,
+  Linking,
 } from "react-native";
 
 export interface EarningsCardProps {
@@ -14,6 +15,7 @@ export interface EarningsCardProps {
   description: string;
   rating: string;
   time: string;
+  href?: string;
   images: {
     bg: string;
     icon1: string;
@@ -28,27 +30,36 @@ export default function EarningsCard({
   description,
   rating,
   time,
+  href,
   images,
 }: EarningsCardProps) {
+  const handlePress = () => {
+    if (href) {
+      Linking.openURL(href);
+    }
+  };
+
   return (
-    <ImageBackground source={{ uri: images.bg }} resizeMode="stretch" style={styles.bg}>
-      <View style={styles.row}>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.amount}>${amount}</Text>
-        </TouchableOpacity>
-        <View style={styles.iconsColumn}>
-          <Image source={{ uri: images.icon1 }} style={styles.icon} />
-          <Image source={{ uri: images.icon2 }} style={styles.icon} />
-          <Image source={{ uri: images.icon3 }} style={styles.icon} />
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.8}>
+      <ImageBackground source={{ uri: images.bg }} resizeMode="stretch" style={styles.bg}>
+        <View style={styles.row}>
+          <View style={styles.button}>
+            <Text style={styles.amount}>${amount}</Text>
+          </View>
+          <View style={styles.iconsColumn}>
+            <Image source={{ uri: images.icon1 }} style={styles.icon} />
+            <Image source={{ uri: images.icon2 }} style={styles.icon} />
+            <Image source={{ uri: images.icon3 }} style={styles.icon} />
+          </View>
+          <View style={styles.textColumn}>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.time}>{time}</Text>
+            <Text style={styles.description}>{description}</Text>
+            <Text style={styles.rating}>⭐ {rating}</Text>
+          </View>
         </View>
-        <View style={styles.textColumn}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.time}>{time}</Text>
-          <Text style={styles.description}>{description}</Text>
-          <Text style={styles.rating}>⭐ {rating}</Text>
-        </View>
-      </View>
-    </ImageBackground>
+      </ImageBackground>
+    </TouchableOpacity>
   );
 }
 

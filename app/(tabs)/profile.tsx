@@ -27,6 +27,9 @@ export default function Profile() {
       <Text style={styles.item}>Email: {userData.email}</Text>
       <Text style={styles.item}>Phone: {userData.phone}</Text>
       <Text style={styles.item}>DOB: {userData.dob}</Text>
+      <Text style={styles.item}>Gender: {userData.gender}</Text>
+      <Text style={styles.item}>Country: {userData.country}</Text>
+      <Text style={styles.item}>Zip: {userData.zip}</Text>
       <Button title="Settings" onPress={() => router.push('/settings')} />
     </View>
   );
