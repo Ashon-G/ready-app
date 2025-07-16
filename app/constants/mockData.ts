@@ -7,6 +7,7 @@ export const earnings: EarningsCardProps[] = [
     description: "Quick 2-minute opinion poll",
     rating: "4.0",
     time: "2 Min",
+    href: "https://example.com",
     images: {
       bg: "https://...qvhvoye0...png",
       icon1: "https://...qeaevsjy...png",
@@ -20,6 +21,7 @@ export const earnings: EarningsCardProps[] = [
     description: "Longer survey with detailed questions",
     rating: "4.8",
     time: "10 Min",
+    href: "https://example.com",
     images: {
       bg: "https://...onxv3ekp...png",
       icon1: "https://...09xdu9lj...png",

@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 
 export default function Header() {
+  const [earnings, setEarnings] = useState(0);
+
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        return onSnapshot(doc(db, 'users', user.uid), (snap) => {
+          const data: any = snap.data();
+          setEarnings(data?.earnings ?? 0);
+        });
+      }
+    });
+    return unsubAuth;
+  }, []);
+
+  const progress = Math.min((earnings / 5) * 100, 100);
+
   return (
     <View style={styles.container}>
       {/* Left side badges */}
@@ -24,10 +43,10 @@ export default function Header() {
       {/* Right side earnings */}
       <View style={styles.rightColumn}>
         <Text style={styles.earningsText}>
-          <Text style={styles.earned}>$2.09</Text> / $5.00
+          <Text style={styles.earned}>${earnings.toFixed(2)}</Text> / $5.00
         </Text>
         <View style={styles.progressBarBackground}>
-          <View style={[styles.progressBarFill, { width: "42%" }]} />
+          <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
         </View>
       </View>
     </View>

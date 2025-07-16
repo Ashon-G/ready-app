@@ -5,12 +5,24 @@ import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'expo-router';
 
-const steps = ['Phone Number', 'Date of Birth', 'Username', 'Email', 'Password'];
+const steps = [
+  'Phone Number',
+  'Date of Birth',
+  'Gender (m/f)',
+  'Country Code',
+  'Zip Code',
+  'Username',
+  'Email',
+  'Password',
+];
 
 export default function Signup() {
   const [currentStep, setCurrentStep] = useState(0);
   const [phone, setPhone] = useState('');
   const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('');
+  const [country, setCountry] = useState('');
+  const [zip, setZip] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +41,9 @@ export default function Signup() {
     await setDoc(doc(db, 'users', cred.user.uid), {
       phone,
       dob,
+      gender,
+      country,
+      zip,
       username,
       email,
     });
@@ -42,10 +57,16 @@ export default function Signup() {
       case 1:
         return <TextInput placeholder="Date of Birth" style={styles.input} value={dob} onChangeText={setDob} />;
       case 2:
-        return <TextInput placeholder="Username" style={styles.input} value={username} onChangeText={setUsername} />;
+        return <TextInput placeholder="Gender" style={styles.input} value={gender} onChangeText={setGender} />;
       case 3:
-        return <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />;
+        return <TextInput placeholder="Country Code" style={styles.input} value={country} onChangeText={setCountry} />;
       case 4:
+        return <TextInput placeholder="Zip Code" style={styles.input} value={zip} onChangeText={setZip} />;
+      case 5:
+        return <TextInput placeholder="Username" style={styles.input} value={username} onChangeText={setUsername} />;
+      case 6:
+        return <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />;
+      case 7:
         return <TextInput placeholder="Password" style={styles.input} secureTextEntry value={password} onChangeText={setPassword} />;
       default:
         return null;

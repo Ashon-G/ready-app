@@ -1,6 +1,6 @@
 import EarningsCard from "@/components/EarningsCard";
 import VideoAd from "@/components/VideoAd";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -12,11 +12,36 @@ import {
   StyleSheet,
 } from "react-native";
 import { earnings } from "../constants/mockData";
+import { fetchSurveys, Survey } from "@/lib/cpx";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import bonusBg from "@/assets/images/videoad-bg.png";
 import Header from "@/components/Header";
 
 export default function HomeScreen() {
   const [adVisible, setAdVisible] = useState(false);
+  const [surveys, setSurveys] = useState<Survey[]>([]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        const data: any = snap.data();
+        if (data) {
+          const info = {
+            birthday: new Date(data.dob),
+            gender: data.gender as 'm' | 'f',
+            country: data.country,
+            zip: data.zip,
+          };
+          const s = await fetchSurveys(user.uid, info);
+          setSurveys(s);
+        }
+      }
+    });
+    return unsub;
+  }, []);
   return (
     <SafeAreaView style={styles.safeContainer}>
       <Header />
@@ -89,11 +114,24 @@ export default function HomeScreen() {
 
         {/* Earnings Cards */}
         <View style={styles.card}>
-          {earnings.map((item, index) => (
-            <View key={index} style={styles.earningCardWrapper}>
-              <EarningsCard {...item} />
-            </View>
-          ))}
+          {(surveys.length ? surveys : earnings).map((item, index) => {
+            const props = 'href' in item
+              ? {
+                  amount: item.payout_publisher_usd,
+                  title: `Survey ${item.id}`,
+                  description: `Earn ${item.payout} in your currency`,
+                  rating: item.conversion_rate,
+                  time: `${item.loi} Min`,
+                  href: item.href,
+                  images: earnings[0].images,
+                }
+              : item;
+            return (
+              <View key={index} style={styles.earningCardWrapper}>
+                <EarningsCard {...props} />
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
