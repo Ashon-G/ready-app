@@ -3,6 +3,10 @@
     "extra": {
       "eas": {
         "projectId": "5739fbcc-10ef-4990-bf18-7e403231dad0"
+      },
+      "cpx": {
+        "appId": "26024",
+        "secureHash": "giPTmdFjOauZKOwkAFAmrMCGXm276sMu"
       }
     },
     "android": {

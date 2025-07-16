@@ -1,8 +1,12 @@
 
 import md5 from 'crypto-js/md5';
+import Constants from 'expo-constants';
 
-const APP_ID = '26024';
-const SECURE_HASH = 'giPTmdFjOauZKOwkAFAmrMCGXm276sMu';
+const { appId, secureHash } =
+  (Constants.expoConfig?.extra as any)?.cpx ?? {};
+
+const APP_ID = appId ?? '26024';
+const SECURE_HASH = secureHash ?? 'giPTmdFjOauZKOwkAFAmrMCGXm276sMu';
 
 export interface Survey {
   id: string;
@@ -32,8 +36,13 @@ export async function fetchSurveys(
   const month = (birthday.getUTCMonth() + 1).toString().padStart(2, '0');
   const year = birthday.getUTCFullYear().toString();
   const secure = md5(`${userId}-${SECURE_HASH}`).toString();
-  const agent = typeof navigator !== 'undefined' ? encodeURIComponent(navigator.userAgent) : '';
-  const url = `https://live-api.cpx-research.com/api/get-surveys.php?app_id=${APP_ID}&ext_user_id=${userId}&subid_1=&subid_2=&output_method=api&ip_user=&user_agent=${agent}&limit=12&secure_hash=${secure}&main_info=true&birthday_day=${day}&birthday_month=${month}&birthday_year=${year}&gender=${gender}&user_country_code=${country}&zip_code=${zip}`;
+  const agent = typeof navigator !== 'undefined'
+    ? encodeURIComponent(navigator.userAgent)
+    : 'ReactNative';
+  const ipRes = await fetch('https://api.ipify.org?format=json');
+  const ipJson = await ipRes.json();
+  const ip = ipJson.ip ?? '';
+  const url = `https://live-api.cpx-research.com/api/get-surveys.php?app_id=${APP_ID}&ext_user_id=${userId}&subid_1=&subid_2=&output_method=api&ip_user=${ip}&user_agent=${agent}&limit=12&secure_hash=${secure}&main_info=true&birthday_day=${day}&birthday_month=${month}&birthday_year=${year}&gender=${gender}&user_country_code=${country}&zip_code=${zip}`;
   const res = await fetch(url);
   const json: SurveyResponse = await res.json();
   if (json.status === 'success') return json.surveys;
