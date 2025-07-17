@@ -1,25 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { updateUserStreak } from "@/lib/streak";
 
-export default function Header() {
-  const [earnings, setEarnings] = useState(0);
+export type HeaderProps = {
+  onPressStreak: (streak: number) => void;
+  earnings?: number;
+  streak?: number;
+};
+
+export default function Header({ onPressStreak, earnings = 0, streak = 0 }: HeaderProps) {
+  const [earnVal, setEarnVal] = useState(earnings);
+  const [streakVal, setStreakVal] = useState(streak);
 
   useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, (user) => {
+    let unsubSnap: () => void = () => {};
+    const unsubAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        return onSnapshot(doc(db, 'users', user.uid), (snap) => {
+        const s = await updateUserStreak(user.uid);
+        setStreakVal(s);
+        unsubSnap = onSnapshot(doc(db, 'users', user.uid), (snap) => {
           const data: any = snap.data();
-          setEarnings(data?.earnings ?? 0);
+          setEarnVal(data?.earnings ?? 0);
+          setStreakVal(data?.streak ?? s);
         });
       }
     });
-    return unsubAuth;
+    return () => {
+      unsubSnap();
+      unsubAuth();
+    };
   }, []);
 
-  const progress = Math.min((earnings / 5) * 100, 100);
+  const progress = Math.min((earnVal / 5) * 100, 100);
 
   return (
     <View style={styles.container}>
@@ -31,19 +46,19 @@ export default function Header() {
             style={styles.icon}
           />
         </View>
-        <View style={styles.badge}>
+        <TouchableOpacity style={styles.badge} onPress={() => onPressStreak(streakVal)}>
           <Image
             source={{ uri: "https://img.icons8.com/color/48/fire-element.png" }}
             style={styles.icon}
           />
-          <Text style={styles.badgeText}>1</Text>
-        </View>
+          <Text style={styles.badgeText}>{streakVal}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Right side earnings */}
       <View style={styles.rightColumn}>
         <Text style={styles.earningsText}>
-          <Text style={styles.earned}>${earnings.toFixed(2)}</Text> / $5.00
+          <Text style={styles.earned}>${earnVal.toFixed(2)}</Text> / $5.00
         </Text>
         <View style={styles.progressBarBackground}>
           <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
