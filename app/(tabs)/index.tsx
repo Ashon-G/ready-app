@@ -14,14 +14,19 @@ import {
 import { earnings } from "../constants/mockData";
 import { fetchSurveys, Survey } from "@/lib/cpx";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import bonusBg from "@/assets/images/videoad-bg.png";
 import Header from "@/components/Header";
+import StreakDrawer from "@/components/StreakDrawer";
+import { updateUserStreak } from "@/lib/streak";
 
 export default function HomeScreen() {
   const [adVisible, setAdVisible] = useState(false);
   const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [streakDrawerOpen, setStreakDrawerOpen] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [earningsVal, setEarningsVal] = useState(0);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -42,9 +47,32 @@ export default function HomeScreen() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    let unsubSnap: () => void = () => {};
+    const unsubAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const s = await updateUserStreak(user.uid);
+        setStreak(s);
+        unsubSnap = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+          const data: any = snap.data();
+          setEarningsVal(data?.earnings ?? 0);
+          setStreak(data?.streak ?? s);
+        });
+      }
+    });
+    return () => {
+      unsubSnap();
+      unsubAuth();
+    };
+  }, []);
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <Header />
+      <Header
+        onPressStreak={() => setStreakDrawerOpen(true)}
+        earnings={earningsVal}
+        streak={streak}
+      />
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -135,6 +163,11 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
+      <StreakDrawer
+        visible={streakDrawerOpen}
+        onClose={() => setStreakDrawerOpen(false)}
+        streak={streak}
+      />
       <VideoAd visible={adVisible} onClose={() => setAdVisible(false)} />
     </SafeAreaView>
   );
