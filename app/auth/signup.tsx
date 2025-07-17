@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Animated } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -14,6 +15,13 @@ const steps = [
   'Username',
   'Email',
   'Password',
+];
+
+const lottieUrls = [
+  'https://lottie.host/b536c4a2-ad82-4794-a19a-0daf2145d501/Soimw5P3kL.lottie',
+  'https://lottie.host/b413fdeb-2c12-400e-8fbe-50cb2a62b931/a2s38Nr2Xe.lottie',
+  'https://lottie.host/848fa07e-f8f7-41dd-bdf0-8a7e167ff05f/qxZbh0lIXG.lottie',
+  'https://lottie.host/0e87d4f0-0b1a-43b7-8a08-caaa43e4ff11/zmjChbFSNi.lottie',
 ];
 
 export default function Signup() {
@@ -79,6 +87,14 @@ export default function Signup() {
     <View style={styles.container}>
       <Animated.View style={{ opacity: fadeAnim, width: '100%' }}>
         <Text style={styles.title}>{steps[currentStep]}</Text>
+        {currentStep < lottieUrls.length && (
+          <LottieView
+            source={{ uri: lottieUrls[currentStep] }}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
+        )}
         {renderStep()}
       </Animated.View>
       <Button title={isLast ? 'Submit' : 'Next'} onPress={isLast ? handleSubmit : animateNext} />
@@ -90,4 +106,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   title: { fontSize: 24, marginBottom: 20 },
   input: { borderWidth: 1, borderColor: '#ccc', padding: 10, width: '100%', marginBottom: 20, borderRadius: 4 },
+  lottie: { width: 150, height: 150, marginBottom: 20, alignSelf: 'center' },
 });
