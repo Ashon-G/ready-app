@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": ".", // ✅ this is important
+    "jsx": "react-native",
+    "moduleResolution": "node16",
+    "target": "es6",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "lib": ["es6", "dom"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"] // ✅ allows "@/components/..." etc.
-    },
-    "moduleResolution": "node",
-    "types": ["expo", "jest"],
+      "@/*": ["./*"]
+    }
   },
   "extends": "expo/tsconfig.base"
 }

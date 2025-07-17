@@ -26,12 +26,12 @@ export default function HomeScreen() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const snap = await getDoc(doc(db, 'users', user.uid));
+        const snap = await getDoc(doc(db, "users", user.uid));
         const data: any = snap.data();
         if (data) {
           const info = {
             birthday: new Date(data.dob),
-            gender: data.gender as 'm' | 'f',
+            gender: data.gender as "m" | "f",
             country: data.country,
             zip: data.zip,
           };
@@ -49,8 +49,6 @@ export default function HomeScreen() {
         style={styles.scrollContainer}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
-       
-
         {/* Video Bonus */}
         <TouchableOpacity onPress={() => setAdVisible(true)}>
           <ImageBackground
@@ -87,12 +85,11 @@ export default function HomeScreen() {
         <View style={styles.card}>
           <View style={styles.surveyRow}>
             <Image
-              source={{
-                uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/SbVinpZIfd/c85k7hyy_expires_30_days.png",
-              }}
+              source={require("@/assets/images/check-circle-icon.svg")}
               style={styles.surveyIcon}
               resizeMode="stretch"
             />
+
             <Text style={styles.surveyTitle}>Surveys</Text>
             <Image
               source={{
@@ -115,17 +112,18 @@ export default function HomeScreen() {
         {/* Earnings Cards */}
         <View style={styles.card}>
           {(surveys.length ? surveys : earnings).map((item, index) => {
-            const props = 'href' in item
-              ? {
-                  amount: item.payout_publisher_usd,
-                  title: `Survey ${item.id}`,
-                  description: `Earn ${item.payout} in your currency`,
-                  rating: item.conversion_rate,
-                  time: `${item.loi} Min`,
-                  href: item.href,
-                  images: earnings[0].images,
-                }
-              : item;
+            const props =
+              "href" in item
+                ? {
+                    amount: item.payout_publisher_usd,
+                    title: `Survey ${item.id}`,
+                    description: `Earn ${item.payout} in your currency`,
+                    rating: item.conversion_rate,
+                    time: `${item.loi} Min`,
+                    href: item.href,
+                    images: earnings[0].images,
+                  }
+                : item;
             return (
               <View key={index} style={styles.earningCardWrapper}>
                 <EarningsCard {...props} />
