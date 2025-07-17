@@ -27,6 +27,13 @@ export default function HomeScreen() {
   const [streakDrawerOpen, setStreakDrawerOpen] = useState(false);
   const [streak, setStreak] = useState(0);
   const [earningsVal, setEarningsVal] = useState(0);
+  const [extendedToday, setExtendedToday] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [achievements, setAchievements] = useState({
+    daily: 0,
+    weekly: 0,
+    monthly: 0,
+  });
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -52,12 +59,17 @@ export default function HomeScreen() {
     let unsubSnap: () => void = () => {};
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const s = await updateUserStreak(user.uid);
-        setStreak(s);
+        const res = await updateUserStreak(user.uid);
+        setStreak(res.streak);
+        setExtendedToday(res.extendedToday);
+        setProgress(res.progress);
+        setAchievements(res.achievements);
         unsubSnap = onSnapshot(doc(db, 'users', user.uid), (snap) => {
           const data: any = snap.data();
           setEarningsVal(data?.earnings ?? 0);
-          setStreak(data?.streak ?? s);
+          setStreak(data?.streak ?? res.streak);
+          setProgress(data?.achievementProgress ?? res.progress);
+          setAchievements(data?.achievements ?? res.achievements);
         });
       }
     });
@@ -165,6 +177,9 @@ export default function HomeScreen() {
         visible={streakDrawerOpen}
         onClose={() => setStreakDrawerOpen(false)}
         streak={streak}
+        progress={progress}
+        extendedToday={extendedToday}
+        achievements={achievements}
       />
       <VideoAd visible={adVisible} onClose={() => setAdVisible(false)} />
     </SafeAreaView>

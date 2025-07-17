@@ -13,6 +13,13 @@ export type StreakDrawerProps = {
   visible: boolean;
   onClose: () => void;
   streak: number;
+  progress?: number;
+  extendedToday?: boolean;
+  achievements?: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+  };
 };
 
 const weekDays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
@@ -21,6 +28,9 @@ export default function StreakDrawer({
   visible,
   onClose,
   streak,
+  progress = 0,
+  extendedToday = false,
+  achievements = { daily: 0, weekly: 0, monthly: 0 },
 }: StreakDrawerProps) {
   const dayCircles = weekDays.map((d, i) => {
     const active = i < streak % 7;
@@ -35,6 +45,14 @@ export default function StreakDrawer({
       </View>
     );
   });
+
+  const progress3 = Math.min(progress, 3);
+  const progress10 = Math.min(progress, 10);
+  const progress30 = Math.min(progress, 30);
+
+  const pct3 = (progress3 / 3) * 100;
+  const pct10 = (progress10 / 10) * 100;
+  const pct30 = (progress30 / 30) * 100;
 
   return (
     <BottomDrawer isOpen={visible} onClose={onClose}>
@@ -64,11 +82,13 @@ export default function StreakDrawer({
         </View>
 
         <View style={styles.week}>{dayCircles}</View>
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            You've extended your streak today!
-          </Text>
-        </View>
+        {extendedToday && (
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              You've extended your streak today!
+            </Text>
+          </View>
+        )}
 
         <View style={{ marginTop: 24 }}>
           <View style={styles.achieveHeader}>
@@ -82,12 +102,12 @@ export default function StreakDrawer({
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.achieveName}>Hat Trick</Text>
-              <Text style={styles.achieveSub}>3 day streak</Text>
+              <Text style={styles.achieveSub}>{progress3}/3 day streak</Text>
               <View style={styles.progressBar}>
-                <View style={[styles.progressInner, { width: "100%" }]} />
+                <View style={[styles.progressInner, { width: `${pct3}%` }]} />
               </View>
             </View>
-            <Text style={styles.earned}>5¢ earned</Text>
+            <Text style={styles.earned}>{`$${(achievements.daily * 0.01).toFixed(2)} daily`}</Text>
           </View>
           <View style={styles.achievementRow}>
             <Image
@@ -96,13 +116,13 @@ export default function StreakDrawer({
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.achieveName}>007</Text>
-              <Text style={styles.achieveSub}>3/7 day streak</Text>
+              <Text style={styles.achieveSub}>{progress10}/10 day streak</Text>
               <View style={styles.progressBar}>
-                <View style={[styles.progressInner, { width: "42%" }]} />
+                <View style={[styles.progressInner, { width: `${pct10}%` }]} />
               </View>
             </View>
             <View style={styles.reward}>
-              <Text style={styles.rewardText}>10¢</Text>
+              <Text style={styles.rewardText}>{`$${(achievements.weekly * 0.05).toFixed(2)} weekly`}</Text>
             </View>
           </View>
           <View style={styles.achievementRow}>
@@ -112,13 +132,13 @@ export default function StreakDrawer({
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.achieveName}>Dirty Thirty</Text>
-              <Text style={styles.achieveSub}>3/30 day streak</Text>
+              <Text style={styles.achieveSub}>{progress30}/30 day streak</Text>
               <View style={styles.progressBar}>
-                <View style={[styles.progressInner, { width: "10%" }]} />
+                <View style={[styles.progressInner, { width: `${pct30}%` }]} />
               </View>
             </View>
             <View style={styles.reward}>
-              <Text style={styles.rewardText}>75¢</Text>
+              <Text style={styles.rewardText}>{`$${(achievements.monthly * 0.25).toFixed(2)} monthly`}</Text>
             </View>
           </View>
         </View>

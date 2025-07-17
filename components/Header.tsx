@@ -19,12 +19,12 @@ export default function Header({ onPressStreak, earnings = 0, streak = 0 }: Head
     let unsubSnap: () => void = () => {};
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const s = await updateUserStreak(user.uid);
-        setStreakVal(s);
+        const res = await updateUserStreak(user.uid);
+        setStreakVal(res.streak);
         unsubSnap = onSnapshot(doc(db, 'users', user.uid), (snap) => {
           const data: any = snap.data();
           setEarnVal(data?.earnings ?? 0);
-          setStreakVal(data?.streak ?? s);
+          setStreakVal(data?.streak ?? res.streak);
         });
       }
     });
