@@ -30,7 +30,7 @@ export default function Profile() {
       <Text style={styles.item}>Gender: {userData.gender}</Text>
       <Text style={styles.item}>Country: {userData.country}</Text>
       <Text style={styles.item}>Zip: {userData.zip}</Text>
-      <Button title="Settings" onPress={() => router.push('/settings')} />
+      <Button title="Settings" onPress={() => router.push('/profile-settings')} />
     </View>
   );
 }
