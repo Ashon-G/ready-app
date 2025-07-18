@@ -1,51 +1,70 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Animated,
+  Dimensions,
+} from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'expo-router';
 
 const steps = [
-  'Phone Number',
-  'Date of Birth',
-  'Gender (m/f)',
-  'Country Code',
-  'Zip Code',
   'Username',
   'Email',
+  'Gender',
+  'Address',
+  'Phone Number',
+  'Date of Birth',
   'Password',
 ];
 
 export default function Signup() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [phone, setPhone] = useState('');
-  const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('');
-  const [country, setCountry] = useState('');
-  const [zip, setZip] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [gender, setGender] = useState('');
+  const [street, setStreet] = useState('');
+  const [city, setCity] = useState('');
+  const [zip, setZip] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const width = Dimensions.get('window').width;
   const router = useRouter();
 
   const animateNext = () => {
-    Animated.sequence([
-      Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true })
-    ]).start(() => setCurrentStep((s) => s + 1));
+    Animated.timing(slideAnim, {
+      toValue: -width,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      slideAnim.setValue(width);
+      setCurrentStep((s) => s + 1);
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    });
   };
 
   const handleSubmit = async () => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await setDoc(doc(db, 'users', cred.user.uid), {
-      phone,
-      dob,
-      gender,
-      country,
-      zip,
       username,
       email,
+      gender,
+      street,
+      city,
+      zip,
+      phone,
+      dob,
     });
     router.replace('/(tabs)');
   };
@@ -53,21 +72,85 @@ export default function Signup() {
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <TextInput placeholder="Phone" style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />;
+        return (
+          <TextInput
+            placeholder="Username"
+            style={styles.input}
+            value={username}
+            onChangeText={setUsername}
+          />
+        );
       case 1:
-        return <TextInput placeholder="Date of Birth" style={styles.input} value={dob} onChangeText={setDob} />;
+        return (
+          <TextInput
+            placeholder="Email"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
+        );
       case 2:
-        return <TextInput placeholder="Gender" style={styles.input} value={gender} onChangeText={setGender} />;
+        return (
+          <TextInput
+            placeholder="Gender"
+            style={styles.input}
+            value={gender}
+            onChangeText={setGender}
+          />
+        );
       case 3:
-        return <TextInput placeholder="Country Code" style={styles.input} value={country} onChangeText={setCountry} />;
+        return (
+          <View style={{ width: '100%' }}>
+            <TextInput
+              placeholder="Street"
+              style={styles.input}
+              value={street}
+              onChangeText={setStreet}
+            />
+            <TextInput
+              placeholder="City"
+              style={styles.input}
+              value={city}
+              onChangeText={setCity}
+            />
+            <TextInput
+              placeholder="Zip Code"
+              style={styles.input}
+              value={zip}
+              onChangeText={setZip}
+            />
+          </View>
+        );
       case 4:
-        return <TextInput placeholder="Zip Code" style={styles.input} value={zip} onChangeText={setZip} />;
+        return (
+          <TextInput
+            placeholder="Phone number"
+            style={styles.input}
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+          />
+        );
       case 5:
-        return <TextInput placeholder="Username" style={styles.input} value={username} onChangeText={setUsername} />;
+        return (
+          <TextInput
+            placeholder="Date of Birth"
+            style={styles.input}
+            value={dob}
+            onChangeText={setDob}
+          />
+        );
       case 6:
-        return <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />;
-      case 7:
-        return <TextInput placeholder="Password" style={styles.input} secureTextEntry value={password} onChangeText={setPassword} />;
+        return (
+          <TextInput
+            placeholder="Password"
+            style={styles.input}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+        );
       default:
         return null;
     }
@@ -77,7 +160,7 @@ export default function Signup() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{ opacity: fadeAnim, width: '100%' }}>
+      <Animated.View style={{ transform: [{ translateX: slideAnim }], width: '100%' }}>
         <Text style={styles.title}>{steps[currentStep]}</Text>
         {renderStep()}
       </Animated.View>
