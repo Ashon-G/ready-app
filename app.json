@@ -1,5 +1,6 @@
 {
   "expo": {
+    "icon": "./assets/icon.png",
     "extra": {
       "eas": {
         "projectId": "5739fbcc-10ef-4990-bf18-7e403231dad0"
