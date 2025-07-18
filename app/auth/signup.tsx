@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
@@ -284,8 +283,14 @@ export default function Signup() {
         </View>
       </Animated.View>
       <View style={styles.buttonRow}>
-        {step > 0 && <Button title="Back" onPress={prev} />}
-        <Button title={step === steps.length - 1 ? 'Submit' : 'Next'} onPress={next} />
+        {step > 0 && (
+          <TouchableOpacity style={styles.navButton} onPress={prev}>
+            <Text style={styles.navButtonText}>Back</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.navButton} onPress={next}>
+          <Text style={styles.navButtonText}>{step === steps.length - 1 ? 'Submit' : 'Next'}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -364,5 +369,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 20,
+  },
+  navButton: {
+    backgroundColor: '#39e079',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  navButtonText: {
+    color: '#0e1a13',
+    fontWeight: 'bold',
   },
 });
