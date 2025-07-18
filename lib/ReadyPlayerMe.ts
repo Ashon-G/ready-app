@@ -85,11 +85,10 @@ export default class ReadyPlayerMe {
   }
 
   static async getAvatarGLBUrl(avatarId: string, preview = false): Promise<string> {
-    if (preview) {
-      return `${API_BASE_V2}/avatars/${avatarId}.glb?preview=true`;
-    } else {
-      return `${MODEL_BASE}/${avatarId}.glb`;
-    }
+    const base = MODEL_BASE;
+    return preview
+      ? `${base}/${avatarId}.glb?preview=true`
+      : `${base}/${avatarId}.glb`;
   }
 
   static async getAssets(
@@ -127,3 +126,4 @@ export default class ReadyPlayerMe {
     return json.data;
   }
 }
+
