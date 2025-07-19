@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,50 +7,56 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
-} from 'react-native';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import PhoneInput from 'react-native-phone-number-input';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
-import { useRouter } from 'expo-router';
+} from "react-native";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  doc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import { useRouter } from "expo-router";
 
-const { width } = Dimensions.get('window');
-const GOOGLE_PLACES_API_KEY = 'YOUR_GOOGLE_PLACES_API_KEY';
+const { width } = Dimensions.get("window");
+const GOOGLE_PLACES_API_KEY = "YOUR_GOOGLE_PLACES_API_KEY";
 
 const steps = [
-  'Username',
-  'Email',
-  'Gender',
-  'Address',
-  'Phone',
-  'Birthday',
-  'Password',
+  "Username",
+  "Email",
+  "Gender",
+  "Address",
+  "Phone",
+  "Birthday",
+  "Password",
 ];
 
 export default function Signup() {
   const [step, setStep] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
 
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [gender, setGender] = useState('');
-  const [street, setStreet] = useState('');
-  const [city, setCity] = useState('');
-  const [zip, setZip] = useState('');
-  const [phone, setPhone] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [zip, setZip] = useState("");
+  const [phone, setPhone] = useState("");
   const [dob, setDob] = useState<Date | null>(null);
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
-  const [usernameError, setUsernameError] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [genderError, setGenderError] = useState('');
-  const [addressError, setAddressError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [dobError, setDobError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [usernameError, setUsernameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [genderError, setGenderError] = useState("");
+  const [addressError, setAddressError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [dobError, setDobError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const router = useRouter();
@@ -65,23 +71,26 @@ export default function Signup() {
   };
 
   const next = async () => {
-    setUsernameError('');
-    setEmailError('');
-    setGenderError('');
-    setAddressError('');
-    setPhoneError('');
-    setDobError('');
-    setPasswordError('');
+    setUsernameError("");
+    setEmailError("");
+    setGenderError("");
+    setAddressError("");
+    setPhoneError("");
+    setDobError("");
+    setPasswordError("");
 
     if (step === 0) {
       if (!username) {
-        setUsernameError('Username is required');
+        setUsernameError("Username is required");
         return;
       }
-      const q = query(collection(db, 'users'), where('username', '==', username));
+      const q = query(
+        collection(db, "users"),
+        where("username", "==", username)
+      );
       const snap = await getDocs(q);
       if (!snap.empty) {
-        setUsernameError('Username already taken');
+        setUsernameError("Username already taken");
         return;
       }
     }
@@ -89,42 +98,42 @@ export default function Signup() {
     if (step === 1) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        setEmailError('Enter a valid email');
+        setEmailError("Enter a valid email");
         return;
       }
     }
 
     if (step === 2) {
       if (!gender) {
-        setGenderError('Please select your gender');
+        setGenderError("Please select your gender");
         return;
       }
     }
 
     if (step === 3) {
       if (!street || !city || !zip) {
-        setAddressError('Complete address is required');
+        setAddressError("Complete address is required");
         return;
       }
     }
 
     if (step === 4) {
-      if (!phone) {
-        setPhoneError('Enter a valid phone number');
+      if (!phone || phone.length < 6) {
+        setPhoneError("Enter a valid phone number");
         return;
       }
     }
 
     if (step === 5) {
       if (!dob) {
-        setDobError('Select your date of birth');
+        setDobError("Select your date of birth");
         return;
       }
     }
 
     if (step === 6) {
       if (!password || password !== confirm) {
-        setPasswordError('Passwords do not match');
+        setPasswordError("Passwords do not match");
         return;
       }
     }
@@ -144,24 +153,27 @@ export default function Signup() {
 
   const handleSubmit = async () => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, 'users', cred.user.uid), {
+    await setDoc(doc(db, "users", cred.user.uid), {
       username,
       email,
       gender,
       street,
       city,
       zip,
-      country: 'US',
+      country: "US",
       phone,
       dob: dob ? dob.toISOString() : null,
     });
-    router.replace('/(tabs)');
+    router.replace("/(tabs)");
   };
 
   return (
     <View style={styles.container}>
       <Animated.View
-        style={[styles.slider, { width: width * steps.length, transform: [{ translateX }] }]}
+        style={[
+          styles.slider,
+          { width: width * steps.length, transform: [{ translateX }] },
+        ]}
       >
         <View style={styles.step}>
           <Text style={styles.title}>What should we call you?</Text>
@@ -171,7 +183,9 @@ export default function Signup() {
             value={username}
             onChangeText={setUsername}
           />
-          {usernameError ? <Text style={styles.error}>{usernameError}</Text> : null}
+          {usernameError ? (
+            <Text style={styles.error}>{usernameError}</Text>
+          ) : null}
         </View>
         <View style={styles.step}>
           <Text style={styles.title}>What's your email address?</Text>
@@ -188,16 +202,36 @@ export default function Signup() {
           <Text style={styles.title}>What's your gender?</Text>
           <View style={styles.genderRow}>
             <TouchableOpacity
-              style={[styles.genderOption, gender === 'Male' && styles.genderSelected]}
-              onPress={() => setGender('Male')}
+              style={[
+                styles.genderOption,
+                gender === "Male" && styles.genderSelected,
+              ]}
+              onPress={() => setGender("Male")}
             >
-              <Text style={[styles.genderText, gender === 'Male' && styles.genderTextSelected]}>Male</Text>
+              <Text
+                style={[
+                  styles.genderText,
+                  gender === "Male" && styles.genderTextSelected,
+                ]}
+              >
+                Male
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.genderOption, gender === 'Female' && styles.genderSelected]}
-              onPress={() => setGender('Female')}
+              style={[
+                styles.genderOption,
+                gender === "Female" && styles.genderSelected,
+              ]}
+              onPress={() => setGender("Female")}
             >
-              <Text style={[styles.genderText, gender === 'Female' && styles.genderTextSelected]}>Female</Text>
+              <Text
+                style={[
+                  styles.genderText,
+                  gender === "Female" && styles.genderTextSelected,
+                ]}
+              >
+                Female
+              </Text>
             </TouchableOpacity>
           </View>
           {genderError ? <Text style={styles.error}>{genderError}</Text> : null}
@@ -210,8 +244,8 @@ export default function Signup() {
             onPress={(data, details = null) => {
               setStreet(data.description);
               const comp = details?.address_components || [];
-              const cityComp = comp.find((c) => c.types.includes('locality'));
-              const zipComp = comp.find((c) => c.types.includes('postal_code'));
+              const cityComp = comp.find((c) => c.types.includes("locality"));
+              const zipComp = comp.find((c) => c.types.includes("postal_code"));
               if (cityComp) setCity(cityComp.long_name);
               if (zipComp) setZip(zipComp.long_name);
             }}
@@ -231,24 +265,28 @@ export default function Signup() {
             onChangeText={setZip}
             keyboardType="numeric"
           />
-          {addressError ? <Text style={styles.error}>{addressError}</Text> : null}
+          {addressError ? (
+            <Text style={styles.error}>{addressError}</Text>
+          ) : null}
         </View>
         <View style={styles.step}>
           <Text style={styles.title}>Enter your phone number</Text>
-          <PhoneInput
-            defaultValue={phone}
-            defaultCode="US"
-            layout="first"
-            onChangeFormattedText={(text) => setPhone(text)}
-            containerStyle={styles.phoneContainer}
-            textContainerStyle={styles.phoneTextContainer}
+          <TextInput
+            placeholder="Phone number"
+            style={styles.input}
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
           />
           {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
         </View>
         <View style={styles.step}>
           <Text style={styles.title}>When's your birthday?</Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-            <Text>{dob ? dob.toLocaleDateString() : 'Select date'}</Text>
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            style={styles.input}
+          >
+            <Text>{dob ? dob.toLocaleDateString() : "Select date"}</Text>
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -279,7 +317,9 @@ export default function Signup() {
             onChangeText={setConfirm}
             secureTextEntry
           />
-          {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
+          {passwordError ? (
+            <Text style={styles.error}>{passwordError}</Text>
+          ) : null}
         </View>
       </Animated.View>
       <View style={styles.buttonRow}>
@@ -289,7 +329,9 @@ export default function Signup() {
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.navButton} onPress={next}>
-          <Text style={styles.navButtonText}>{step === steps.length - 1 ? 'Submit' : 'Next'}</Text>
+          <Text style={styles.navButtonText}>
+            {step === steps.length - 1 ? "Submit" : "Next"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -299,85 +341,76 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fbfa',
+    backgroundColor: "#f8fbfa",
     paddingTop: 60,
   },
   slider: {
-    flexDirection: 'row',
+    flexDirection: "row",
     flex: 1,
   },
   step: {
     width,
     paddingHorizontal: 20,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    color: '#0e1a13',
-    textAlign: 'center',
+    color: "#0e1a13",
+    textAlign: "center",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1e6d9',
-    backgroundColor: '#e8f2ec',
+    borderColor: "#d1e6d9",
+    backgroundColor: "#e8f2ec",
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
-    color: '#0e1a13',
-  },
-  phoneContainer: {
-    backgroundColor: '#e8f2ec',
-    borderRadius: 8,
-    width: '100%',
-    marginBottom: 12,
-  },
-  phoneTextContainer: {
-    backgroundColor: 'transparent',
+    color: "#0e1a13",
   },
   genderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   genderOption: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#d1e6d9',
+    borderColor: "#d1e6d9",
     borderRadius: 20,
     paddingVertical: 10,
     marginHorizontal: 5,
-    alignItems: 'center',
+    alignItems: "center",
   },
   genderSelected: {
-    backgroundColor: '#39e079',
-    borderColor: '#39e079',
+    backgroundColor: "#39e079",
+    borderColor: "#39e079",
   },
   genderText: {
-    color: '#0e1a13',
+    color: "#0e1a13",
   },
   genderTextSelected: {
-    color: '#fff',
+    color: "#fff",
   },
   error: {
-    color: 'red',
+    color: "red",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: 20,
   },
   navButton: {
-    backgroundColor: '#39e079',
+    backgroundColor: "#39e079",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
   navButtonText: {
-    color: '#0e1a13',
-    fontWeight: 'bold',
+    color: "#0e1a13",
+    fontWeight: "bold",
   },
 });

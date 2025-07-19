@@ -12,10 +12,18 @@
   "jest": {
     "preset": "jest-expo"
   },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
+  },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@novu/react-native": "^3.5.0",
-    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-community/datetimepicker": "8.4.1",
     "@react-navigation/native": "^7.1.6",
     "crypto-js": "^4.2.0",
     "expo": "~53.0.17",
@@ -23,7 +31,7 @@
     "expo-font": "~13.3.2",
     "expo-gl": "~15.1.7",
     "expo-linking": "~7.1.7",
-    "expo-router": "~5.1.3",
+    "expo-router": "5.1.4",
     "expo-splash-screen": "~0.30.10",
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.10",
@@ -34,15 +42,13 @@
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "^13.15.0",
-    "react-native-google-places-autocomplete": "^2.5.7",
-    "react-native-phone-number-input": "^2.1.0",
-    "@react-native-community/datetimepicker": "^7.0.0",
+    "react-native-webview": "13.13.5",
     "three": "^0.166.1",
     "three-stdlib": "^2.36.0"
   },
